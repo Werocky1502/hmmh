@@ -1,3 +1,5 @@
+using Hmmh.Api.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Hmmh.Api.Data;
@@ -5,7 +7,7 @@ namespace Hmmh.Api.Data;
 /// <summary>
 ///     EF Core database context for HMMH data.
 /// </summary>
-public sealed class HmmhDbContext : DbContext
+public sealed class HmmhDbContext : IdentityDbContext<ApplicationUser>
 {
     /// <summary>
     ///     Initializes a new instance of the <see cref="HmmhDbContext" /> class.
@@ -14,6 +16,7 @@ public sealed class HmmhDbContext : DbContext
     public HmmhDbContext(DbContextOptions<HmmhDbContext> options)
         : base(options)
     {
+        // Forward configuration to the base IdentityDbContext.
     }
 
     /// <summary>
@@ -22,6 +25,7 @@ public sealed class HmmhDbContext : DbContext
     /// <param name="modelBuilder">Model builder for entity configuration.</param>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // Keep Identity defaults and extend with application-specific mappings later.
         base.OnModelCreating(modelBuilder);
     }
 }

@@ -1,8 +1,10 @@
 import { StrictMode } from 'react';
 import * as ReactDOM from 'react-dom/client';
 import { MantineProvider, createTheme } from '@mantine/core';
+import { BrowserRouter } from 'react-router-dom';
 import '@mantine/core/styles.css';
 import App from './app/app';
+import { AuthProvider } from './app/auth/auth-context';
 import './styles.css';
 
 const theme = createTheme({
@@ -19,7 +21,11 @@ const root = ReactDOM.createRoot(
 root.render(
   <StrictMode>
     <MantineProvider theme={theme}>
-      <App />
+      <BrowserRouter>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </BrowserRouter>
     </MantineProvider>
   </StrictMode>,
 );

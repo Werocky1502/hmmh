@@ -1,0 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&display=swap');
+
+.page {
+  position: relative;
+  min-height: 100vh;
+  background: linear-gradient(160deg, #f0ebe4 0%, #f7f4ee 45%, #e9f1f0 100%);
+  color: #112729;
+  overflow: hidden;
+}
+
+.pattern {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(75, 181, 169, 0.25), transparent 55%),
+    radial-gradient(circle at 78% 12%, rgba(248, 214, 170, 0.35), transparent 60%),
+    radial-gradient(circle at 82% 78%, rgba(126, 196, 188, 0.3), transparent 60%),
+    linear-gradient(140deg, #f3ede6 0%, #f6f2ea 38%, #e9f1f0 100%);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
+  opacity: 0.95;
+  pointer-events: none;
+}
+
+
+.content {
+  position: relative;
+  min-height: 100vh;
+  padding: 48px 16px;
+  z-index: 1;
+}
+
+.stack {
+  text-align: center;
+}
+
+.title {
+  font-family: 'Cormorant Garamond', 'Fraunces', serif;
+  font-size: clamp(2.8rem, 5.5vw + 1rem, 5rem);
+  line-height: 1.05;
+}
+
+.subtitle {
+  max-width: 520px;
+  color: #2f5458;
+}
+
+.cta {
+  margin-top: 12px;
+  padding-left: 36px;
+  padding-right: 36px;
+}
