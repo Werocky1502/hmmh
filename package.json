@@ -1,0 +1,22 @@
+{
+  "name": "hmmh",
+  "version": "1.0.0",
+  "description": "HelpMeManageHealth (HMMH) is a modular web application to track user weight and daily calorie intake. It is built as an Nx monorepo with a React + TypeScript UI, a .NET REST API, and a PostgreSQL database.",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "libs/*"
+  ],
+  "scripts": {
+    "nx": "nx",
+    "build": "nx build",
+    "lint": "nx lint",
+    "test": "nx test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "nx": "^22.4.5"
+  }
+}
