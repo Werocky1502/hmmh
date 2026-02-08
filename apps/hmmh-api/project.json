@@ -22,6 +22,18 @@
       "options": {
         "command": "docker build -f apps/hmmh-api/Dockerfile . -t hmmh-api:dev"
       }
+    },
+    "db:up": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker compose -f apps/hmmh-api/Db/docker-compose.yml up -d"
+      }
+    },
+    "db:down": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker compose -f apps/hmmh-api/Db/docker-compose.yml down"
+      }
     }
   }
 }

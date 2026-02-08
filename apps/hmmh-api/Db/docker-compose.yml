@@ -1,0 +1,23 @@
+services:
+  hmmh-postgres:
+    image: postgres:16-alpine
+    container_name: hmmh-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${HMMH_DB_NAME:-hmmh}
+      POSTGRES_USER: ${HMMH_DB_USER:-hmmh}
+      POSTGRES_PASSWORD: ${HMMH_DB_PASSWORD:-hmmh}
+    ports:
+      - "5432:5432"
+    volumes:
+      - hmmh_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  hmmh_postgres_data:
+    name: hmmh_postgres_data
