@@ -17,6 +17,33 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "nx": "^22.4.5"
+    "@nx/devkit": "22.4.5",
+    "@nx/js": "22.4.5",
+    "@nx/react": "^22.4.5",
+    "@nx/vite": "22.4.5",
+    "@nx/web": "22.4.5",
+    "@swc-node/register": "~1.9.1",
+    "@swc/core": "~1.5.7",
+    "@swc/helpers": "~0.5.11",
+    "@types/node": "^20.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.2.0",
+    "@vitest/ui": "^4.0.0",
+    "jiti": "2.4.2",
+    "jsdom": "~22.1.0",
+    "nx": "^22.4.5",
+    "prettier": "~3.6.2",
+    "typescript": "~5.9.2",
+    "vite": "^7.0.0",
+    "vitest": "^4.0.0"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@mantine/core": "^8.3.14",
+    "@mantine/hooks": "^8.3.14",
+    "@tabler/icons-react": "^3.36.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   }
 }
