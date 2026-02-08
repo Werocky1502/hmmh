@@ -2,3 +2,31 @@
 .nx/installation
 .nx/cache
 .nx/workspace-data
+
+# Node
+node_modules/
+dist/
+build/
+.env
+.env.*
+.npmrc.user
+*.log
+
+# React tooling
+.eslintcache
+.parcel-cache/
+coverage/
+
+# .NET
+bin/
+obj/
+.vs/
+TestResults/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# OS
+.DS_Store
+Thumbs.db
