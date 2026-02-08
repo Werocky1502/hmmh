@@ -11,7 +11,12 @@
     "nx": "nx",
     "build": "nx build",
     "lint": "nx lint",
-    "test": "nx test"
+    "test": "nx test",
+    "dev:ui": "nx dev hmmh-ui",
+    "build:ui": "nx build hmmh-ui",
+    "api:run": "nx run hmmh-api:run",
+    "api:build": "nx run hmmh-api:build",
+    "api:docker": "nx run hmmh-api:docker-build"
   },
   "keywords": [],
   "author": "",

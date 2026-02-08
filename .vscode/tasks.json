@@ -13,6 +13,54 @@
 			"isBackground": true,
 			"problemMatcher": [],
 			"group": "build"
+		},
+		{
+			"label": "nx build hmmh-ui",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"nx",
+				"build",
+				"hmmh-ui"
+			],
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "nx run hmmh-api",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"nx",
+				"run",
+				"hmmh-api:run"
+			],
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "nx build hmmh-api",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"nx",
+				"run",
+				"hmmh-api:build"
+			],
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "nx docker-build hmmh-api",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"nx",
+				"run",
+				"hmmh-api:docker-build"
+			],
+			"problemMatcher": [],
+			"group": "build"
 		}
 	]
 }
