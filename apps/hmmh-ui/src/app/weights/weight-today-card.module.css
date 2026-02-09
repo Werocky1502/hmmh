@@ -1,0 +1,20 @@
+.card {
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.formRow {
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.helper {
+  margin-top: 4px;
+}
+
+.dateInput {
+  max-width: 240px;
+}
+
+.weightInput {
+  max-width: 200px;
+}

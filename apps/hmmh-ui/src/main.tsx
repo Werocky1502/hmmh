@@ -3,6 +3,8 @@ import * as ReactDOM from 'react-dom/client';
 import { MantineProvider, createTheme } from '@mantine/core';
 import { BrowserRouter } from 'react-router-dom';
 import '@mantine/core/styles.css';
+import '@mantine/charts/styles.css';
+import '@mantine/dates/styles.css';
 import App from './app/app';
 import { AuthProvider } from './app/auth/auth-context';
 import './styles.css';

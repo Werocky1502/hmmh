@@ -17,6 +17,11 @@
   width: 100px;
 }
 
+.backButton {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
 .title {
   text-align: center;
   font-weight: 600;
@@ -27,8 +32,16 @@
   padding-right: 8px;
 }
 
-.grid {
-  margin-top: 24px;
+.filterCard {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.chartCard {
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.filterInput {
+  max-width: 260px;
 }
 
 .filterRow {
@@ -38,10 +51,6 @@
   gap: 16px;
   flex-wrap: wrap;
   justify-content: flex-end;
-}
-
-.filterInput {
-  max-width: 260px;
 }
 
 .filterLabel {
@@ -54,23 +63,12 @@
   margin-top: 8px;
 }
 
-.card {
-  background: rgba(255, 255, 255, 0.95);
+.section {
+  margin-top: 24px;
 }
 
-.clickableCard {
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.clickableCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 16px 30px rgba(16, 42, 47, 0.12);
-}
-
-.clickableCard:focus-visible {
-  outline: 2px solid rgba(31, 111, 115, 0.5);
-  outline-offset: 3px;
+.tableCard {
+  background: rgba(255, 255, 255, 0.98);
 }
 
 .sparkline {
@@ -88,11 +86,6 @@
   height: 100%;
 }
 
-.statRow {
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
 .sparklineEmpty {
   text-align: center;
 }
@@ -108,31 +101,14 @@
   box-shadow: 0 6px 16px rgba(16, 42, 47, 0.2);
 }
 
-.bars {
-  display: flex;
-  align-items: flex-end;
-  gap: 10px;
-  height: 140px;
+.statRow {
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
-.bar {
-  flex: 1;
-  background: #e5f0ef;
-  border-radius: 14px;
-  overflow: hidden;
-  display: flex;
-  align-items: flex-end;
-}
-
-.bar span {
-  display: block;
-  width: 100%;
-  background: linear-gradient(180deg, #1f6f73 0%, #4bb4a5 100%);
-  border-radius: 14px 14px 0 0;
-}
-
-.section {
-  margin-top: 24px;
+.emptyState {
+  padding: 16px 0;
+  text-align: center;
 }
 
 @media (max-width: 768px) {

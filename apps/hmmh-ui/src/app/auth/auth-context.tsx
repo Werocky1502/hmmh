@@ -10,6 +10,7 @@ interface AuthSession {
 interface AuthContextValue {
   isAuthenticated: boolean;
   userName: string | null;
+  token: string | null;
   signInWithPassword: (login: string, password: string) => Promise<void>;
   signUpWithPassword: (login: string, password: string) => Promise<void>;
   signOut: () => void;
@@ -78,6 +79,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     () => ({
       isAuthenticated: Boolean(session),
       userName: session?.userName ?? null,
+      token: session?.token ?? null,
       signInWithPassword,
       signUpWithPassword,
       signOut,

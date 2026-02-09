@@ -6,70 +6,63 @@ import {
   Container,
   Group,
   Menu,
-  SimpleGrid,
   Stack,
+  Table,
   Text,
   Title,
 } from '@mantine/core';
 import { AreaChart } from '@mantine/charts';
 import { DatePickerInput, type DatesRangeValue } from '@mantine/dates';
-import { IconChevronDown, IconLogout, IconTrash } from '@tabler/icons-react';
+import { IconArrowLeft, IconChevronDown, IconLogout, IconTrash } from '@tabler/icons-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { TooltipProps } from 'recharts';
 import { useAuth } from '../auth/auth-context';
+import { deleteWeight, getWeightRange } from '../weights/weights-api';
+import { WeightEntryCard } from '../weights/weight-entry-card';
 import type { WeightEntry } from '../weights/weights-types';
-import { getWeightRange } from '../weights/weights-api';
-import { WeightTodayCard } from '../weights/weight-today-card';
 import {
   clampDateRange,
   formatAxisDate,
+  formatDisplayDate,
   formatRangeLabel,
-  getDefaultDashboardRange,
+  getDefaultTwoWeekRange,
   parseDateInputValue,
+  startOfToday,
   sortWeightsByDate,
   toDateInputValue,
 } from '../weights/weights-utils';
-import styles from './dashboard-page.module.css';
+import styles from './weights-page.module.css';
 
-const calorieSeries = [1780, 1905, 1720, 1840, 1760, 1690, 1810];
-
-const renderWeightTooltip = ({ payload }: TooltipProps<number, string>) => {
-  const rawValue = payload?.[0]?.value;
-  const numericValue = Number(rawValue);
-
-  if (!Number.isFinite(numericValue)) {
-    return null;
-  }
-
-  return <div className={styles.tooltip}>{numericValue.toFixed(1)} kg</div>;
-};
-
-export const DashboardPage = () => {
+export const WeightsPage = () => {
   const { userName, signOut, deleteAccount, token } = useAuth();
   const navigate = useNavigate();
-  const { start, end } = useMemo(() => getDefaultDashboardRange(), []);
+  const { start, end } = useMemo(() => getDefaultTwoWeekRange(), []);
   const [startDate, setStartDate] = useState(start);
   const [endDate, setEndDate] = useState(end);
   const [range, setRange] = useState<DatesRangeValue<string>>([
     toDateInputValue(start),
     toDateInputValue(end),
   ]);
+  const [entryDate, setEntryDate] = useState(startOfToday());
   const [weights, setWeights] = useState<WeightEntry[]>([]);
   const [isLoadingRange, setIsLoadingRange] = useState(false);
   const [rangeError, setRangeError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const initial = userName?.[0]?.toUpperCase() ?? 'U';
-
-  const sortedWeights = useMemo(() => sortWeightsByDate(weights), [weights]);
-  const weightValues = useMemo(() => sortedWeights.map(entry => entry.weightKg), [sortedWeights]);
-  const chartData = useMemo(
-    () => sortedWeights.map(entry => ({ date: entry.date, weight: entry.weightKg })),
-    [sortedWeights],
+  const chartWeights = useMemo(() => sortWeightsByDate(weights), [weights]);
+  const sortedWeights = useMemo<WeightEntry[]>(
+    () => sortWeightsByDate(weights).slice().reverse(),
+    [weights],
   );
-  const hasWeightData = sortedWeights.length > 0;
+  const weightValues = useMemo(() => chartWeights.map(entry => entry.weightKg), [chartWeights]);
+  const chartData = useMemo(
+    () => chartWeights.map(entry => ({ date: entry.date, weight: entry.weightKg })),
+    [chartWeights],
+  );
+  const hasWeightData = chartWeights.length > 0;
   const hasTrendData = weightValues.length > 1;
-  const rangeLabel = useMemo(() => formatRangeLabel(startDate, endDate), [startDate, endDate]);
   const minWeight = useMemo(() => (hasWeightData ? Math.min(...weightValues) : null), [hasWeightData, weightValues]);
   const maxWeight = useMemo(() => (hasWeightData ? Math.max(...weightValues) : null), [hasWeightData, weightValues]);
   const xAxisProps = useMemo(() => ({ tickFormatter: formatAxisDate }), []);
@@ -85,6 +78,18 @@ export const DashboardPage = () => {
       domain: [minWeight - padding, maxWeight + padding],
     };
   }, [minWeight, maxWeight]);
+  const rangeLabel = useMemo(() => formatRangeLabel(startDate, endDate), [startDate, endDate]);
+
+  const renderWeightTooltip = ({ payload }: TooltipProps<number, string>) => {
+    const rawValue = payload?.[0]?.value;
+    const numericValue = Number(rawValue);
+
+    if (!Number.isFinite(numericValue)) {
+      return null;
+    }
+
+    return <div className={styles.tooltip}>{numericValue.toFixed(1)} kg</div>;
+  };
 
   const loadRange = useCallback(async () => {
     if (!token) {
@@ -95,9 +100,7 @@ export const DashboardPage = () => {
     setRangeError(null);
 
     try {
-      const startValue = toDateInputValue(startDate);
-      const endValue = toDateInputValue(endDate);
-      const response = await getWeightRange(token, startValue, endValue);
+      const response = await getWeightRange(token, toDateInputValue(startDate), toDateInputValue(endDate));
       setWeights(response);
     } catch (loadError) {
       const message = loadError instanceof Error ? loadError.message : 'Failed to load weights.';
@@ -134,23 +137,43 @@ export const DashboardPage = () => {
     navigate('/');
   };
 
-  const handleWeightsNavigate = () => {
-    navigate('/weights');
+  const handleDeleteEntry = async (id: string) => {
+    if (!token) {
+      return;
+    }
+
+    setDeletingId(id);
+    setRangeError(null);
+
+    try {
+      await deleteWeight(token, id);
+      await loadRange();
+    } catch (deleteError) {
+      const message = deleteError instanceof Error ? deleteError.message : 'Failed to delete weight.';
+      setRangeError(message);
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   return (
     <div className={styles.page}>
       <Container size="lg" className={styles.container}>
         <Group justify="space-between" className={styles.header}>
-          <div className={styles.headerSpacer} />
+          <Button
+            variant="subtle"
+            onClick={() => navigate('/dashboard')}
+            className={styles.backButton}
+            leftSection={<IconArrowLeft size={16} />}
+          >
+            Back to dashboard
+          </Button>
           <Title order={2} className={styles.title}>
-            Help me manage health
+            My weight history
           </Title>
           <Menu width={200} position="bottom-end" shadow="md">
             <Menu.Target>
-              <Button variant="subtle" rightSection={<IconChevronDown size={16} />}
-                className={styles.userButton}
-              >
+              <Button variant="subtle" rightSection={<IconChevronDown size={16} />} className={styles.userButton}>
                 <Group gap="sm">
                   <Avatar radius="xl" color="teal">
                     {initial}
@@ -163,11 +186,7 @@ export const DashboardPage = () => {
               <Menu.Item leftSection={<IconLogout size={16} />} onClick={handleLogout}>
                 Logout
               </Menu.Item>
-              <Menu.Item
-                color="red"
-                leftSection={<IconTrash size={16} />}
-                onClick={handleDelete}
-              >
+              <Menu.Item color="red" leftSection={<IconTrash size={16} />} onClick={handleDelete}>
                 Delete account
               </Menu.Item>
             </Menu.Dropdown>
@@ -195,21 +214,8 @@ export const DashboardPage = () => {
           </Text>
         ) : null}
 
-        <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg" className={styles.grid}>
-          <Card
-            withBorder
-            radius="lg"
-            className={`${styles.card} ${styles.clickableCard}`}
-            onClick={handleWeightsNavigate}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                handleWeightsNavigate();
-              }
-            }}
-            role="button"
-            tabIndex={0}
-          >
+        <div className={styles.section}>
+          <Card withBorder radius="lg" className={styles.chartCard}>
             <Stack gap="md">
               <Group justify="space-between">
                 <Text fw={600}>Weight trend</Text>
@@ -279,48 +285,67 @@ export const DashboardPage = () => {
               </Group>
             </Stack>
           </Card>
-
-          <Card withBorder radius="lg" className={styles.card}>
-            <Stack gap="md">
-              <Group justify="space-between">
-                <Text fw={600}>Daily calories</Text>
-                <Badge color="teal" variant="light">
-                  avg 1,790
-                </Badge>
-              </Group>
-              <div className={styles.bars}>
-                {calorieSeries.map((value) => (
-                  <div key={value} className={styles.bar}>
-                    <span style={{ height: `${(value / 2200) * 100}%` }} />
-                  </div>
-                ))}
-              </div>
-              <Group justify="space-between" className={styles.statRow}>
-                <div>
-                  <Text size="sm" c="dimmed">
-                    Lowest day
-                  </Text>
-                  <Text fw={600}>1,690 kcal</Text>
-                </div>
-                <div>
-                  <Text size="sm" c="dimmed">
-                    Highest day
-                  </Text>
-                  <Text fw={600}>1,905 kcal</Text>
-                </div>
-                <div>
-                  <Text size="sm" c="dimmed">
-                    Goal band
-                  </Text>
-                  <Text fw={600}>1,700-1,900</Text>
-                </div>
-              </Group>
-            </Stack>
-          </Card>
-        </SimpleGrid>
+        </div>
 
         <div className={styles.section}>
-          <WeightTodayCard onSaved={loadRange} />
+          <WeightEntryCard
+            date={entryDate}
+            onDateChange={setEntryDate}
+            allowDateChange
+            onSaved={loadRange}
+          />
+        </div>
+
+        <div className={styles.section}>
+          <Card withBorder radius="lg" className={styles.tableCard}>
+            <Stack gap="md">
+              <Group justify="space-between">
+                <Text fw={600}>Weights</Text>
+                <Badge color="teal" variant="light">
+                  {sortedWeights.length} entries
+                </Badge>
+              </Group>
+              {isLoadingRange ? (
+                <Text size="sm" c="dimmed" className={styles.emptyState}>
+                  Loading weights...
+                </Text>
+              ) : sortedWeights.length === 0 ? (
+                <Text size="sm" c="dimmed" className={styles.emptyState}>
+                  No weights recorded for this range.
+                </Text>
+              ) : (
+                <Table striped highlightOnHover>
+                  <Table.Thead>
+                    <Table.Tr>
+                      <Table.Th>Date</Table.Th>
+                      <Table.Th>Weight (kg)</Table.Th>
+                      <Table.Th />
+                    </Table.Tr>
+                  </Table.Thead>
+                  <Table.Tbody>
+                    {sortedWeights.map((entry) => (
+                      <Table.Tr key={entry.id}>
+                        <Table.Td>{formatDisplayDate(entry.date)}</Table.Td>
+                        <Table.Td>{entry.weightKg.toFixed(1)}</Table.Td>
+                        <Table.Td align="right">
+                          <Button
+                            size="xs"
+                            variant="subtle"
+                            color="red"
+                            leftSection={<IconTrash size={14} />}
+                            onClick={() => handleDeleteEntry(entry.id)}
+                            loading={deletingId === entry.id}
+                          >
+                            Delete
+                          </Button>
+                        </Table.Td>
+                      </Table.Tr>
+                    ))}
+                  </Table.Tbody>
+                </Table>
+              )}
+            </Stack>
+          </Card>
         </div>
       </Container>
     </div>

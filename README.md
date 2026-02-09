@@ -15,6 +15,7 @@ It is built as an Nx monorepo with a React + TypeScript UI, a .NET REST API, and
 4. Add API app with demo endpoint and Dockerfile.
 5. Add PostgreSQL container setup for API development.
 6. Add authentication and user management (Identity + JWT + UI pages).
+7. Add weight management (weight entries API + dashboard and weights page UI).
 
 ## Configuration Notes
 - UI reads the API base URL from `VITE_API_BASE_URL` (defaults to same origin).

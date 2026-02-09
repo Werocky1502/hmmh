@@ -3,6 +3,7 @@ using System;
 using Hmmh.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Hmmh.Api.Data.Migrations
 {
     [DbContext(typeof(HmmhDbContext))]
-    partial class HmmhDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260209203108_AddWeightEntries")]
+    partial class AddWeightEntries
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

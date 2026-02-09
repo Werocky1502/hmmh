@@ -4,6 +4,7 @@ import { useAuth } from './auth/auth-context';
 import { DashboardPage } from './pages/dashboard-page';
 import { LandingPage } from './pages/landing-page';
 import { LoginPage } from './pages/login-page';
+import { WeightsPage } from './pages/weights-page';
 
 const RequireAuth = ({ children }: { children: ReactElement }) => {
   const { isAuthenticated } = useAuth();
@@ -25,6 +26,14 @@ export function App() {
         element={
           <RequireAuth>
             <DashboardPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/weights"
+        element={
+          <RequireAuth>
+            <WeightsPage />
           </RequireAuth>
         }
       />
