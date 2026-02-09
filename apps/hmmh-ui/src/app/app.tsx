@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './auth/auth-context';
+import { CaloriesPage } from './pages/calories-page';
 import { DashboardPage } from './pages/dashboard-page';
 import { LandingPage } from './pages/landing-page';
 import { LoginPage } from './pages/login-page';
@@ -34,6 +35,14 @@ export function App() {
         element={
           <RequireAuth>
             <WeightsPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/calories"
+        element={
+          <RequireAuth>
+            <CaloriesPage />
           </RequireAuth>
         }
       />

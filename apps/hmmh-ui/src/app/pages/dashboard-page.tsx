@@ -18,6 +18,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { TooltipProps } from 'recharts';
 import { useAuth } from '../auth/auth-context';
+import { getCalorieRange } from '../calories/calories-api';
+import { CalorieTodayCard } from '../calories/calorie-today-card';
+import type { CalorieEntry } from '../calories/calories-types';
+import { buildDailyCalorieTotals } from '../calories/calories-utils';
 import type { WeightEntry } from '../weights/weights-types';
 import { getWeightRange } from '../weights/weights-api';
 import { WeightTodayCard } from '../weights/weight-today-card';
@@ -31,8 +35,6 @@ import {
   toDateInputValue,
 } from '../weights/weights-utils';
 import styles from './dashboard-page.module.css';
-
-const calorieSeries = [1780, 1905, 1720, 1840, 1760, 1690, 1810];
 
 const renderWeightTooltip = ({ payload }: TooltipProps<number, string>) => {
   const rawValue = payload?.[0]?.value;
@@ -56,8 +58,11 @@ export const DashboardPage = () => {
     toDateInputValue(end),
   ]);
   const [weights, setWeights] = useState<WeightEntry[]>([]);
+  const [calories, setCalories] = useState<CalorieEntry[]>([]);
   const [isLoadingRange, setIsLoadingRange] = useState(false);
+  const [isLoadingCalories, setIsLoadingCalories] = useState(false);
   const [rangeError, setRangeError] = useState<string | null>(null);
+  const [caloriesError, setCaloriesError] = useState<string | null>(null);
 
   const initial = userName?.[0]?.toUpperCase() ?? 'U';
 
@@ -86,6 +91,45 @@ export const DashboardPage = () => {
     };
   }, [minWeight, maxWeight]);
 
+  const dailyCalories = useMemo(
+    () => buildDailyCalorieTotals(calories, startDate, endDate),
+    [calories, startDate, endDate],
+  );
+  const calorieTotals = useMemo(() => dailyCalories.map(entry => entry.calories), [dailyCalories]);
+  const calorieTotalsWithData = useMemo(
+    () => calorieTotals.filter(total => total > 0),
+    [calorieTotals],
+  );
+  const hasCalorieData = calories.length > 0;
+  const hasCalorieTrend = calorieTotalsWithData.length > 1;
+  const totalCalories = useMemo(
+    () => calorieTotals.reduce((sum, value) => sum + value, 0),
+    [calorieTotals],
+  );
+  const averageCalories = useMemo(
+    () => (hasCalorieData && dailyCalories.length > 0 ? totalCalories / dailyCalories.length : null),
+    [dailyCalories.length, hasCalorieData, totalCalories],
+  );
+  const minCalories = useMemo(
+    () => (calorieTotalsWithData.length ? Math.min(...calorieTotalsWithData) : null),
+    [calorieTotalsWithData],
+  );
+  const maxCalories = useMemo(
+    () => (calorieTotalsWithData.length ? Math.max(...calorieTotalsWithData) : null),
+    [calorieTotalsWithData],
+  );
+
+  const renderCaloriesTooltip = ({ payload }: TooltipProps<number, string>) => {
+    const rawValue = payload?.[0]?.value;
+    const numericValue = Number(rawValue);
+
+    if (!Number.isFinite(numericValue)) {
+      return null;
+    }
+
+    return <div className={styles.tooltip}>{`${numericValue.toFixed(0)} kcal`}</div>;
+  };
+
   const loadRange = useCallback(async () => {
     if (!token) {
       return;
@@ -107,9 +151,34 @@ export const DashboardPage = () => {
     }
   }, [token, startDate, endDate]);
 
+  const loadCaloriesRange = useCallback(async () => {
+    if (!token) {
+      return;
+    }
+
+    setIsLoadingCalories(true);
+    setCaloriesError(null);
+
+    try {
+      const startValue = toDateInputValue(startDate);
+      const endValue = toDateInputValue(endDate);
+      const response = await getCalorieRange(token, startValue, endValue);
+      setCalories(response);
+    } catch (loadError) {
+      const message = loadError instanceof Error ? loadError.message : 'Failed to load calories.';
+      setCaloriesError(message);
+    } finally {
+      setIsLoadingCalories(false);
+    }
+  }, [token, startDate, endDate]);
+
   useEffect(() => {
     void loadRange();
   }, [loadRange]);
+
+  useEffect(() => {
+    void loadCaloriesRange();
+  }, [loadCaloriesRange]);
 
   const handleRangeChange = (value: DatesRangeValue<string>) => {
     setRange(value);
@@ -136,6 +205,10 @@ export const DashboardPage = () => {
 
   const handleWeightsNavigate = () => {
     navigate('/weights');
+  };
+
+  const handleCaloriesNavigate = () => {
+    navigate('/calories');
   };
 
   return (
@@ -192,6 +265,11 @@ export const DashboardPage = () => {
         {rangeError ? (
           <Text size="sm" c="red" className={styles.filterError}>
             {rangeError}
+          </Text>
+        ) : null}
+        {caloriesError ? (
+          <Text size="sm" c="red" className={styles.filterError}>
+            {caloriesError}
           </Text>
         ) : null}
 
@@ -280,39 +358,80 @@ export const DashboardPage = () => {
             </Stack>
           </Card>
 
-          <Card withBorder radius="lg" className={styles.card}>
+          <Card
+            withBorder
+            radius="lg"
+            className={`${styles.card} ${styles.clickableCard}`}
+            onClick={handleCaloriesNavigate}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                handleCaloriesNavigate();
+              }
+            }}
+            role="button"
+            tabIndex={0}
+          >
             <Stack gap="md">
               <Group justify="space-between">
                 <Text fw={600}>Daily calories</Text>
                 <Badge color="teal" variant="light">
-                  avg 1,790
+                  {averageCalories !== null ? `avg ${averageCalories.toFixed(0)}` : '--'}
                 </Badge>
               </Group>
-              <div className={styles.bars}>
-                {calorieSeries.map((value) => (
-                  <div key={value} className={styles.bar}>
-                    <span style={{ height: `${(value / 2200) * 100}%` }} />
-                  </div>
-                ))}
+              <div className={styles.sparkline}>
+                {isLoadingCalories ? (
+                  <Text size="sm" c="dimmed" className={styles.sparklineEmpty}>
+                    Loading calories...
+                  </Text>
+                ) : !hasCalorieData ? (
+                  <Text size="sm" c="dimmed" className={styles.sparklineEmpty}>
+                    No calories recorded for this range.
+                  </Text>
+                ) : !hasCalorieTrend ? (
+                  <Text size="sm" c="dimmed" className={styles.sparklineEmpty}>
+                    Add another day to see the trend line.
+                  </Text>
+                ) : (
+                  <AreaChart
+                    h={120}
+                    w="100%"
+                    data={dailyCalories}
+                    dataKey="date"
+                    series={[{ name: 'calories', color: 'teal.6' }]}
+                    curveType="monotone"
+                    withDots
+                    dotProps={{ r: 3 }}
+                    activeDotProps={{ r: 5 }}
+                    strokeWidth={3}
+                    areaProps={{ stroke: 'var(--mantine-color-teal-6)', fillOpacity: 0.15 }}
+                    gridAxis="x"
+                    withXAxis
+                    withYAxis
+                    xAxisProps={xAxisProps}
+                    unit="kcal"
+                    tooltipProps={{ content: renderCaloriesTooltip }}
+                  />
+                )}
               </div>
               <Group justify="space-between" className={styles.statRow}>
                 <div>
                   <Text size="sm" c="dimmed">
                     Lowest day
                   </Text>
-                  <Text fw={600}>1,690 kcal</Text>
+                  <Text fw={600}>{minCalories !== null ? `${minCalories.toFixed(0)} kcal` : '--'}</Text>
                 </div>
                 <div>
                   <Text size="sm" c="dimmed">
                     Highest day
                   </Text>
-                  <Text fw={600}>1,905 kcal</Text>
+                  <Text fw={600}>{maxCalories !== null ? `${maxCalories.toFixed(0)} kcal` : '--'}</Text>
                 </div>
                 <div>
                   <Text size="sm" c="dimmed">
-                    Goal band
+                    Entries
                   </Text>
-                  <Text fw={600}>1,700-1,900</Text>
+                  <Text fw={600}>{calories.length}</Text>
                 </div>
               </Group>
             </Stack>
@@ -320,7 +439,10 @@ export const DashboardPage = () => {
         </SimpleGrid>
 
         <div className={styles.section}>
-          <WeightTodayCard onSaved={loadRange} />
+          <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
+            <WeightTodayCard onSaved={loadRange} />
+            <CalorieTodayCard onSaved={loadCaloriesRange} />
+          </SimpleGrid>
         </div>
       </Container>
     </div>

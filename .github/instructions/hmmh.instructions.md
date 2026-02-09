@@ -41,6 +41,7 @@ These rules apply to all changes in this repository unless a more specific instr
 5. Add PostgreSQL container setup under API. Commit.
 6. Add authentication and user management (Identity + JWT + UI pages). Commit.
 7. Add weight management (weight entries API + dashboard and weights page UI). Commit.
+8. Add calorie management (calorie entries API + dashboard and calories page UI). Commit.
 
 ## Commits
 - Make a commit after each phase listed above.

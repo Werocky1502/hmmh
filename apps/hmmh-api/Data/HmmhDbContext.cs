@@ -25,6 +25,11 @@ public sealed class HmmhDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<WeightEntry> WeightEntries => Set<WeightEntry>();
 
     /// <summary>
+    ///     Calorie entries recorded by users.
+    /// </summary>
+    public DbSet<CalorieEntry> CalorieEntries => Set<CalorieEntry>();
+
+    /// <summary>
     ///     Configures EF Core model mappings.
     /// </summary>
     /// <param name="modelBuilder">Model builder for entity configuration.</param>
@@ -40,6 +45,17 @@ public sealed class HmmhDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(entry => entry.EntryDate).HasColumnType("date");
             entity.Property(entry => entry.WeightKg).HasPrecision(5, 2);
             entity.HasIndex(entry => new { entry.UserId, entry.EntryDate }).IsUnique();
+            entity.HasOne(entry => entry.User)
+                .WithMany()
+                .HasForeignKey(entry => entry.UserId);
+        });
+
+        modelBuilder.Entity<CalorieEntry>(entity =>
+        {
+            // Allow multiple calorie records per user per date.
+            entity.HasKey(entry => entry.Id);
+            entity.Property(entry => entry.EntryDate).HasColumnType("date");
+            entity.HasIndex(entry => new { entry.UserId, entry.EntryDate });
             entity.HasOne(entry => entry.User)
                 .WithMany()
                 .HasForeignKey(entry => entry.UserId);

@@ -16,6 +16,7 @@ It is built as an Nx monorepo with a React + TypeScript UI, a .NET REST API, and
 5. Add PostgreSQL container setup for API development.
 6. Add authentication and user management (Identity + JWT + UI pages).
 7. Add weight management (weight entries API + dashboard and weights page UI).
+8. Add calorie management (calorie entries API + dashboard and calories page UI).
 
 ## Configuration Notes
 - UI reads the API base URL from `VITE_API_BASE_URL` (defaults to same origin).
