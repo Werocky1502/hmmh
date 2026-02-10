@@ -5,6 +5,7 @@ It is built as an Nx monorepo with a React + TypeScript UI, a .NET REST API, and
 ## Repository Structure (planned)
 - apps/hmmh-ui: React + TypeScript + Mantine UI
 - apps/hmmh-api: ASP.NET Core API with EF Core
+- apps/hmmh-api/Tests: MSTest-based API test project
 - libs/: Shared code and utilities
 - apps/hmmh-api/Db: Database context, models, migrations, repositories, scripts, and PostgreSQL container setup
 
@@ -21,6 +22,7 @@ It is built as an Nx monorepo with a React + TypeScript UI, a .NET REST API, and
 10. Refactor API into layered architecture (services, repositories, factories, DI extensions).
 11. Refactor UI into shared components, chart abstractions, and page templates.
 12. Add SQL script runner with tracked execution and test data seeding.
+13. Add API tests with an MSTest project and Nx command.
 
 ## Configuration Notes
 - UI reads the API base URL from `VITE_API_BASE_URL` (defaults to same origin).

@@ -12,6 +12,7 @@
     "build:ui": "nx build hmmh-ui",
     "api:run": "nx run hmmh-api:run",
     "api:build": "nx run hmmh-api:build",
+    "api:test": "nx run hmmh-api:test",
     "api:docker": "nx run hmmh-api:docker-build",
     "db:up": "nx run hmmh-api:db:up",
     "db:down": "nx run hmmh-api:db:down",

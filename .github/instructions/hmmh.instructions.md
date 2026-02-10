@@ -27,7 +27,6 @@ These rules apply to all changes in this repository unless a more specific instr
 ## API (.NET + EF Core)
 - Use the latest .NET SDK (currently .NET 10) and EF Core.
 - Build a REST API following standard ASP.NET Core patterns.
-- No API tests in the first iteration.
 
 ## Database (PostgreSQL)
 - Provide a Docker-based PostgreSQL setup scoped to the API project.
@@ -46,6 +45,7 @@ These rules apply to all changes in this repository unless a more specific instr
 10. Refactor API into layered architecture (services, repositories, factories, DI extensions). Commit.
 11. Refactor UI into shared components, chart abstractions, and page templates. Commit.
 12. Add SQL script runner with tracked execution and test data seeding. Commit.
+13. Add API tests with an MSTest project and Nx command. Commit.
 
 ## Commits
 - Make a commit after each phase listed above.

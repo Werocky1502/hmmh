@@ -17,6 +17,12 @@
         "command": "dotnet build apps/hmmh-api/Hmmh.Api.csproj -c Release"
       }
     },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "dotnet test apps/hmmh-api/Tests/Hmmh.Api.Tests.csproj"
+      }
+    },
     "docker-build": {
       "executor": "nx:run-commands",
       "options": {
