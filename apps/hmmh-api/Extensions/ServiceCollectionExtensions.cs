@@ -2,9 +2,11 @@ using Hmmh.Api.Db.Data;
 using Hmmh.Api.Db.Repositories;
 using Hmmh.Api.Db.Scripts;
 using Hmmh.Api.Factories;
+using Hmmh.Api.OpenApi;
 using Hmmh.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using OpenIddict.Abstractions;
 using OpenIddict.Validation.AspNetCore;
 
@@ -30,7 +32,38 @@ public static class ServiceCollectionExtensions
         // Register MVC controllers and API tooling.
         services.AddControllers();
         services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen();
+        services.AddSwaggerGen(options =>
+        {
+            options.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Title = "HMMH API",
+                Version = "v1",
+                Description = "HelpMeManageHealth REST API",
+            });
+
+            var bearerScheme = new OpenApiSecurityScheme
+            {
+                Name = "Authorization",
+                Type = SecuritySchemeType.Http,
+                Scheme = "Bearer",
+                BearerFormat = "JWT",
+                In = ParameterLocation.Header,
+                Description = "Use a bearer token from /connect/token.",
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer",
+                },
+            };
+
+            options.AddSecurityDefinition("Bearer", bearerScheme);
+            options.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                [bearerScheme] = Array.Empty<string>(),
+            });
+
+            options.OperationFilter<TokenEndpointOperationFilter>();
+        });
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserAccessor, CurrentUserAccessor>();
 

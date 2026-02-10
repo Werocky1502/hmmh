@@ -36,8 +36,10 @@ public sealed class AuthController : ControllerBase
     /// </summary>
     /// <param name="request">Sign-up payload.</param>
     /// <returns>Account details for the new user.</returns>
+    [AllowAnonymous]
     [HttpPost("sign-up")]
     [ProducesResponseType(typeof(AccountResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<AccountResponse>> SignUp(
         [FromBody] AuthRequest request,

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using OpenIddict.Abstractions;
@@ -28,8 +29,13 @@ public sealed class ConnectController : ControllerBase
     ///     Exchanges credentials or refresh tokens for access tokens.
     /// </summary>
     /// <returns>OAuth token response handled by OpenIddict.</returns>
+    [AllowAnonymous]
     [HttpPost("~/connect/token")]
+    [Consumes("application/x-www-form-urlencoded")]
     [Produces("application/json")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Exchange(CancellationToken cancellationToken)
     {
         // Dispatch the request to the appropriate token flow.
