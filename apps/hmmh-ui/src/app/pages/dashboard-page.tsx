@@ -1,6 +1,5 @@
 import {
   Avatar,
-  Badge,
   Button,
   Card,
   Container,
@@ -18,6 +17,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { TooltipProps } from 'recharts';
 import { useAuth } from '../auth/auth-context';
+import { useDocumentTitle } from '../hooks/use-document-title';
 import { getCalorieRange } from '../calories/calories-api';
 import { CalorieTodayCard } from '../calories/calorie-today-card';
 import type { CalorieEntry } from '../calories/calories-types';
@@ -28,10 +28,12 @@ import { WeightTodayCard } from '../weights/weight-today-card';
 import {
   clampDateRange,
   formatAxisDate,
+  formatDisplayDate,
   formatRangeLabel,
   getDefaultDashboardRange,
   parseDateInputValue,
   sortWeightsByDate,
+  startOfToday,
   toDateInputValue,
 } from '../weights/weights-utils';
 import styles from './dashboard-page.module.css';
@@ -48,6 +50,7 @@ const renderWeightTooltip = ({ payload }: TooltipProps<number, string>) => {
 };
 
 export const DashboardPage = () => {
+  useDocumentTitle('HMMH (Dashboard)');
   const { userName, signOut, deleteAccount, token } = useAuth();
   const navigate = useNavigate();
   const { start, end } = useMemo(() => getDefaultDashboardRange(), []);
@@ -63,6 +66,10 @@ export const DashboardPage = () => {
   const [isLoadingCalories, setIsLoadingCalories] = useState(false);
   const [rangeError, setRangeError] = useState<string | null>(null);
   const [caloriesError, setCaloriesError] = useState<string | null>(null);
+  const todayLabel = useMemo(
+    () => formatDisplayDate(toDateInputValue(startOfToday())),
+    [],
+  );
 
   const initial = userName?.[0]?.toUpperCase() ?? 'U';
 
@@ -75,6 +82,10 @@ export const DashboardPage = () => {
   const hasWeightData = sortedWeights.length > 0;
   const hasTrendData = weightValues.length > 1;
   const rangeLabel = useMemo(() => formatRangeLabel(startDate, endDate), [startDate, endDate]);
+  const averageWeight = useMemo(
+    () => (hasWeightData ? weightValues.reduce((sum, value) => sum + value, 0) / weightValues.length : null),
+    [hasWeightData, weightValues],
+  );
   const minWeight = useMemo(() => (hasWeightData ? Math.min(...weightValues) : null), [hasWeightData, weightValues]);
   const maxWeight = useMemo(() => (hasWeightData ? Math.max(...weightValues) : null), [hasWeightData, weightValues]);
   const xAxisProps = useMemo(() => ({ tickFormatter: formatAxisDate }), []);
@@ -248,19 +259,24 @@ export const DashboardPage = () => {
         </Group>
 
         <div className={styles.filterRow}>
-          <Text size="sm" c="dimmed" className={styles.filterLabel}>
-            Selected period
+          <Text size="sm" c="dimmed" className={styles.currentDate}>
+            Today: {todayLabel}
           </Text>
-          <DatePickerInput
-            type="range"
-            value={range}
-            onChange={handleRangeChange}
-            className={styles.filterInput}
-            placeholder="Pick dates"
-            allowSingleDateInRange
-            label=""
-            valueFormat="YYYY-MM-DD"
-          />
+          <div className={styles.filterControls}>
+            <Text size="sm" c="dimmed" className={styles.filterLabel}>
+              Selected period
+            </Text>
+            <DatePickerInput
+              type="range"
+              value={range}
+              onChange={handleRangeChange}
+              className={styles.filterInput}
+              placeholder="Pick dates"
+              allowSingleDateInRange
+              label=""
+              valueFormat="YYYY-MM-DD"
+            />
+          </div>
         </div>
         {rangeError ? (
           <Text size="sm" c="red" className={styles.filterError}>
@@ -289,11 +305,8 @@ export const DashboardPage = () => {
             tabIndex={0}
           >
             <Stack gap="md">
-              <Group justify="space-between">
+              <Group justify="center" align="center" className={styles.widgetHeader}>
                 <Text fw={600}>Weight trend</Text>
-                <Badge color="teal" variant="light">
-                  {rangeLabel}
-                </Badge>
               </Group>
               <div className={styles.sparkline}>
                 {isLoadingRange ? (
@@ -350,6 +363,14 @@ export const DashboardPage = () => {
                 </div>
                 <div>
                   <Text size="sm" c="dimmed">
+                    Avg weight
+                  </Text>
+                  <Text fw={600}>
+                    {averageWeight !== null ? `${averageWeight.toFixed(1)} kg` : '--'}
+                  </Text>
+                </div>
+                <div>
+                  <Text size="sm" c="dimmed">
                     Entries
                   </Text>
                   <Text fw={600}>{sortedWeights.length}</Text>
@@ -373,11 +394,8 @@ export const DashboardPage = () => {
             tabIndex={0}
           >
             <Stack gap="md">
-              <Group justify="space-between">
+              <Group justify="center" align="center" className={styles.widgetHeader}>
                 <Text fw={600}>Daily calories</Text>
-                <Badge color="teal" variant="light">
-                  {averageCalories !== null ? `avg ${averageCalories.toFixed(0)}` : '--'}
-                </Badge>
               </Group>
               <div className={styles.sparkline}>
                 {isLoadingCalories ? (
@@ -426,6 +444,14 @@ export const DashboardPage = () => {
                     Highest day
                   </Text>
                   <Text fw={600}>{maxCalories !== null ? `${maxCalories.toFixed(0)} kcal` : '--'}</Text>
+                </div>
+                <div>
+                  <Text size="sm" c="dimmed">
+                    Avg calories
+                  </Text>
+                  <Text fw={600}>
+                    {averageCalories !== null ? `${averageCalories.toFixed(0)} kcal` : '--'}
+                  </Text>
                 </div>
                 <div>
                   <Text size="sm" c="dimmed">

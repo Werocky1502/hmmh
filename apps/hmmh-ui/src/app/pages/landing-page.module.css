@@ -50,3 +50,38 @@
   padding-left: 36px;
   padding-right: 36px;
 }
+
+.notice {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  max-width: min(420px, 92vw);
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: rgba(204, 100, 35, 0.92);
+  color: #fff5e9;
+  box-shadow:
+    0 16px 30px rgba(123, 46, 10, 0.22),
+    0 0 0 1px rgba(255, 221, 187, 0.6) inset;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-align: center;
+  animation: noticeFloat 4.5s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes noticeFloat {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-10px, -10px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notice {
+    animation: none;
+  }
+}

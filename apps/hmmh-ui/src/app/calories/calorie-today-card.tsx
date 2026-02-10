@@ -1,9 +1,9 @@
-import { Button, Card, Group, NumberInput, Select, Stack, Text, TextInput, Textarea, Title } from '@mantine/core';
+import { Button, Card, Group, NumberInput, Select, Stack, Text, TextInput, Title } from '@mantine/core';
 import { useMemo, useState } from 'react';
 import { useAuth } from '../auth/auth-context';
 import { createCalorie } from './calories-api';
 import type { CalorieEntryRequest } from './calories-types';
-import { formatDisplayDate, getTodayDateString, parseDateInputValue, toDateInputValue } from './calories-utils';
+import { getTodayDateString, parseDateInputValue, toDateInputValue } from './calories-utils';
 import styles from './calorie-today-card.module.css';
 
 interface CalorieTodayCardProps {
@@ -74,11 +74,8 @@ export const CalorieTodayCard = ({ date, onDateChange, allowDateChange, onSaved 
   return (
     <Card withBorder radius="lg" className={styles.card}>
       <Stack gap="sm">
-        <div>
+        <div className={styles.header}>
           <Title order={4}>Log calories today</Title>
-          <Text size="sm" c="dimmed" className={styles.helper}>
-            {formatDisplayDate(entryDate)}
-          </Text>
         </div>
         <Group gap="md" className={styles.formRow}>
           <NumberInput
@@ -107,6 +104,14 @@ export const CalorieTodayCard = ({ date, onDateChange, allowDateChange, onSaved 
             disabled={isSaving}
             className={styles.textInput}
           />
+          <TextInput
+            label="Note"
+            value={note}
+            onChange={(event) => setNote(event.currentTarget.value)}
+            placeholder="Optional note"
+            disabled={isSaving}
+            className={styles.noteInput}
+          />
           {allowDateChange ? (
             <TextInput
               label="Date"
@@ -117,20 +122,12 @@ export const CalorieTodayCard = ({ date, onDateChange, allowDateChange, onSaved 
               disabled={isSaving}
             />
           ) : null}
+        </Group>
+        <div className={styles.saveRow}>
           <Button onClick={handleSave} loading={isSaving} disabled={typeof calories !== 'number'}>
             Save calories
           </Button>
-        </Group>
-        <Textarea
-          label="Note"
-          value={note}
-          onChange={(event) => setNote(event.currentTarget.value)}
-          placeholder="Optional note"
-          autosize
-          minRows={2}
-          disabled={isSaving}
-          className={styles.noteInput}
-        />
+        </div>
         {error ? (
           <Text size="sm" c="red">
             {error}

@@ -1,4 +1,4 @@
-import { Button, Card, Group, NumberInput, Select, Stack, Text, TextInput, Textarea, Title } from '@mantine/core';
+import { Button, Card, Group, NumberInput, Select, Stack, Text, TextInput, Title } from '@mantine/core';
 import { useMemo, useState } from 'react';
 import { useAuth } from '../auth/auth-context';
 import { createCalorie } from './calories-api';
@@ -102,6 +102,14 @@ export const CalorieEntryCard = ({ date, onDateChange, allowDateChange, onSaved 
             disabled={isSaving}
             className={styles.textInput}
           />
+          <TextInput
+            label="Note"
+            value={note}
+            onChange={(event) => setNote(event.currentTarget.value)}
+            placeholder="Optional note"
+            disabled={isSaving}
+            className={styles.noteInput}
+          />
           {allowDateChange ? (
             <TextInput
               label="Date"
@@ -112,20 +120,12 @@ export const CalorieEntryCard = ({ date, onDateChange, allowDateChange, onSaved 
               disabled={isSaving}
             />
           ) : null}
+        </Group>
+        <div className={styles.saveRow}>
           <Button onClick={handleSave} loading={isSaving} disabled={typeof calories !== 'number'}>
             Save calories
           </Button>
-        </Group>
-        <Textarea
-          label="Note"
-          value={note}
-          onChange={(event) => setNote(event.currentTarget.value)}
-          placeholder="Optional note"
-          autosize
-          minRows={2}
-          disabled={isSaving}
-          className={styles.noteInput}
-        />
+        </div>
         {error ? (
           <Text size="sm" c="red">
             {error}

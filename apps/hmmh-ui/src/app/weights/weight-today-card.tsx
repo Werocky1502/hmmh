@@ -2,12 +2,7 @@ import { Button, Card, Group, NumberInput, Stack, Text, TextInput, Title } from 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../auth/auth-context';
 import { getWeightByDate, upsertWeight } from './weights-api';
-import {
-  formatDisplayDate,
-  getTodayDateString,
-  parseDateInputValue,
-  toDateInputValue,
-} from './weights-utils';
+import { getTodayDateString, parseDateInputValue, toDateInputValue } from './weights-utils';
 import styles from './weight-today-card.module.css';
 
 interface WeightTodayCardProps {
@@ -83,44 +78,45 @@ export const WeightTodayCard = ({ date, onDateChange, allowDateChange, onSaved }
 
   return (
     <Card withBorder radius="lg" className={styles.card}>
-      <Stack gap="sm">
-        <div>
+      <Stack gap="xs" className={styles.content}>
+        <div className={styles.header}>
           <Title order={4}>My weight today</Title>
-          <Text size="sm" c="dimmed" className={styles.helper}>
-            {formatDisplayDate(entryDate)}
-          </Text>
         </div>
-        <Group gap="md" className={styles.formRow}>
-          <NumberInput
-            label="Weight (kg)"
-            value={value}
-            onChange={setValue}
-            min={20}
-            max={500}
-            step={0.1}
-            decimalScale={1}
-            fixedDecimalScale
-            disabled={isLoading}
-            className={styles.weightInput}
-          />
-          {allowDateChange ? (
-            <TextInput
-              label="Date"
-              type="date"
-              value={entryDate}
-              onChange={(event) => handleDateChange(event.currentTarget.value)}
-              className={styles.dateInput}
+        <div className={styles.body}>
+          <Group gap="md" className={styles.formRow}>
+            <NumberInput
+              label="Weight (kg)"
+              value={value}
+              onChange={setValue}
+              min={20}
+              max={500}
+              step={0.1}
+              decimalScale={1}
+              fixedDecimalScale
+              disabled={isLoading}
+              className={styles.weightInput}
             />
+            {allowDateChange ? (
+              <TextInput
+                label="Date"
+                type="date"
+                value={entryDate}
+                onChange={(event) => handleDateChange(event.currentTarget.value)}
+                className={styles.dateInput}
+              />
+            ) : null}
+          </Group>
+          {error ? (
+            <Text size="sm" c="red">
+              {error}
+            </Text>
           ) : null}
+        </div>
+        <div className={styles.saveRow}>
           <Button onClick={handleSave} loading={isSaving} disabled={isLoading || typeof value !== 'number'}>
             Save weight
           </Button>
-        </Group>
-        {error ? (
-          <Text size="sm" c="red">
-            {error}
-          </Text>
-        ) : null}
+        </div>
       </Stack>
     </Card>
   );

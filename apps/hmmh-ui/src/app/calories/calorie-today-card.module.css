@@ -5,25 +5,31 @@
 .formRow {
   align-items: flex-end;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
-.helper {
-  margin-top: 4px;
+.header {
+  text-align: center;
 }
+
 
 .dateInput {
-  max-width: 240px;
+  width: 220px;
 }
 
 .calorieInput {
-  max-width: 200px;
+  width: 220px;
 }
 
 .textInput {
-  min-width: 220px;
+  width: 220px;
 }
 
 .noteInput {
-  flex: 1;
-  min-width: 260px;
+  width: 220px;
+}
+
+.saveRow {
+  display: flex;
+  justify-content: center;
 }

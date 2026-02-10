@@ -20,6 +20,10 @@
 }
 
 .noteInput {
-  flex: 1;
-  min-width: 260px;
+  min-width: 220px;
+}
+
+.saveRow {
+  display: flex;
+  justify-content: center;
 }

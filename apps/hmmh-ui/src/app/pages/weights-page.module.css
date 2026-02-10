@@ -50,7 +50,21 @@
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.filterControls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
   justify-content: flex-end;
+}
+
+.currentDate {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
 }
 
 .filterLabel {
@@ -123,5 +137,10 @@
 
   .headerSpacer {
     display: none;
+  }
+
+  .filterRow {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

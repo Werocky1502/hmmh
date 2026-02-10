@@ -18,6 +18,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { TooltipProps } from 'recharts';
 import { useAuth } from '../auth/auth-context';
+import { useDocumentTitle } from '../hooks/use-document-title';
 import { deleteWeight, getWeightRange } from '../weights/weights-api';
 import { WeightEntryCard } from '../weights/weight-entry-card';
 import type { WeightEntry } from '../weights/weights-types';
@@ -25,7 +26,6 @@ import {
   clampDateRange,
   formatAxisDate,
   formatDisplayDate,
-  formatRangeLabel,
   getDefaultTwoWeekRange,
   parseDateInputValue,
   startOfToday,
@@ -35,6 +35,7 @@ import {
 import styles from './weights-page.module.css';
 
 export const WeightsPage = () => {
+  useDocumentTitle('HMMH (Weights)');
   const { userName, signOut, deleteAccount, token } = useAuth();
   const navigate = useNavigate();
   const { start, end } = useMemo(() => getDefaultTwoWeekRange(), []);
@@ -49,6 +50,10 @@ export const WeightsPage = () => {
   const [isLoadingRange, setIsLoadingRange] = useState(false);
   const [rangeError, setRangeError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const todayLabel = useMemo(
+    () => formatDisplayDate(toDateInputValue(startOfToday())),
+    [],
+  );
 
   const initial = userName?.[0]?.toUpperCase() ?? 'U';
   const chartWeights = useMemo(() => sortWeightsByDate(weights), [weights]);
@@ -63,6 +68,10 @@ export const WeightsPage = () => {
   );
   const hasWeightData = chartWeights.length > 0;
   const hasTrendData = weightValues.length > 1;
+  const averageWeight = useMemo(
+    () => (hasWeightData ? weightValues.reduce((sum, value) => sum + value, 0) / weightValues.length : null),
+    [hasWeightData, weightValues],
+  );
   const minWeight = useMemo(() => (hasWeightData ? Math.min(...weightValues) : null), [hasWeightData, weightValues]);
   const maxWeight = useMemo(() => (hasWeightData ? Math.max(...weightValues) : null), [hasWeightData, weightValues]);
   const xAxisProps = useMemo(() => ({ tickFormatter: formatAxisDate }), []);
@@ -78,7 +87,6 @@ export const WeightsPage = () => {
       domain: [minWeight - padding, maxWeight + padding],
     };
   }, [minWeight, maxWeight]);
-  const rangeLabel = useMemo(() => formatRangeLabel(startDate, endDate), [startDate, endDate]);
 
   const renderWeightTooltip = ({ payload }: TooltipProps<number, string>) => {
     const rawValue = payload?.[0]?.value;
@@ -194,19 +202,24 @@ export const WeightsPage = () => {
         </Group>
 
         <div className={styles.filterRow}>
-          <Text size="sm" c="dimmed" className={styles.filterLabel}>
-            Selected period
+          <Text size="sm" c="dimmed" className={styles.currentDate}>
+            Today: {todayLabel}
           </Text>
-          <DatePickerInput
-            type="range"
-            value={range}
-            onChange={handleRangeChange}
-            className={styles.filterInput}
-            placeholder="Pick dates"
-            allowSingleDateInRange
-            label=""
-            valueFormat="YYYY-MM-DD"
-          />
+          <div className={styles.filterControls}>
+            <Text size="sm" c="dimmed" className={styles.filterLabel}>
+              Selected period
+            </Text>
+            <DatePickerInput
+              type="range"
+              value={range}
+              onChange={handleRangeChange}
+              className={styles.filterInput}
+              placeholder="Pick dates"
+              allowSingleDateInRange
+              label=""
+              valueFormat="YYYY-MM-DD"
+            />
+          </div>
         </div>
         {rangeError ? (
           <Text size="sm" c="red" className={styles.filterError}>
@@ -219,9 +232,6 @@ export const WeightsPage = () => {
             <Stack gap="md">
               <Group justify="space-between">
                 <Text fw={600}>Weight trend</Text>
-                <Badge color="teal" variant="light">
-                  {rangeLabel}
-                </Badge>
               </Group>
               <div className={styles.sparkline}>
                 {isLoadingRange ? (
@@ -274,6 +284,14 @@ export const WeightsPage = () => {
                   </Text>
                   <Text fw={600}>
                     {maxWeight !== null ? `${maxWeight.toFixed(1)} kg` : '--'}
+                  </Text>
+                </div>
+                <div>
+                  <Text size="sm" c="dimmed">
+                    Avg weight
+                  </Text>
+                  <Text fw={600}>
+                    {averageWeight !== null ? `${averageWeight.toFixed(1)} kg` : '--'}
                   </Text>
                 </div>
                 <div>

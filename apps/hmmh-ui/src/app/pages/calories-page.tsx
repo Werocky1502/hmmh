@@ -19,6 +19,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { TooltipProps } from 'recharts';
 import { useAuth } from '../auth/auth-context';
+import { useDocumentTitle } from '../hooks/use-document-title';
 import { deleteCalorie, getCalorieRange } from '../calories/calories-api';
 import { CalorieEntryCard } from '../calories/calorie-entry-card';
 import type { CalorieEntry } from '../calories/calories-types';
@@ -27,7 +28,6 @@ import {
   clampDateRange,
   formatAxisDate,
   formatDisplayDate,
-  formatRangeLabel,
   getDefaultTwoWeekRange,
   parseDateInputValue,
   startOfToday,
@@ -36,6 +36,7 @@ import {
 import styles from './calories-page.module.css';
 
 export const CaloriesPage = () => {
+  useDocumentTitle('HMMH (Calories)');
   const { userName, signOut, deleteAccount, token } = useAuth();
   const navigate = useNavigate();
   const { start, end } = useMemo(() => getDefaultTwoWeekRange(), []);
@@ -51,6 +52,10 @@ export const CaloriesPage = () => {
   const [rangeError, setRangeError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [chartMode, setChartMode] = useState<'total' | 'parts'>('total');
+  const todayLabel = useMemo(
+    () => formatDisplayDate(toDateInputValue(startOfToday())),
+    [],
+  );
 
   const initial = userName?.[0]?.toUpperCase() ?? 'U';
   const dailySeries = useMemo(
@@ -75,6 +80,10 @@ export const CaloriesPage = () => {
   const calorieValues = useMemo(() => totalsWithData.map(entry => entry.total), [totalsWithData]);
   const hasCalorieData = calories.length > 0;
   const hasChartData = totalsWithData.length > 0;
+  const averageCalories = useMemo(
+    () => (calorieValues.length ? calorieValues.reduce((sum, value) => sum + value, 0) / calorieValues.length : null),
+    [calorieValues],
+  );
   const minCalories = useMemo(
     () => (calorieValues.length ? Math.min(...calorieValues) : null),
     [calorieValues],
@@ -96,7 +105,6 @@ export const CaloriesPage = () => {
       domain: [Math.max(minCalories - padding, 0), maxCalories + padding],
     };
   }, [minCalories, maxCalories]);
-  const rangeLabel = useMemo(() => formatRangeLabel(startDate, endDate), [startDate, endDate]);
 
   const partTotals = useMemo(() => {
     return dailySeries.reduce(
@@ -261,19 +269,24 @@ export const CaloriesPage = () => {
         </Group>
 
         <div className={styles.filterRow}>
-          <Text size="sm" c="dimmed" className={styles.filterLabel}>
-            Selected period
+          <Text size="sm" c="dimmed" className={styles.currentDate}>
+            Today: {todayLabel}
           </Text>
-          <DatePickerInput
-            type="range"
-            value={range}
-            onChange={handleRangeChange}
-            className={styles.filterInput}
-            placeholder="Pick dates"
-            allowSingleDateInRange
-            label=""
-            valueFormat="YYYY-MM-DD"
-          />
+          <div className={styles.filterControls}>
+            <Text size="sm" c="dimmed" className={styles.filterLabel}>
+              Selected period
+            </Text>
+            <DatePickerInput
+              type="range"
+              value={range}
+              onChange={handleRangeChange}
+              className={styles.filterInput}
+              placeholder="Pick dates"
+              allowSingleDateInRange
+              label=""
+              valueFormat="YYYY-MM-DD"
+            />
+          </div>
         </div>
         {rangeError ? (
           <Text size="sm" c="red" className={styles.filterError}>
@@ -286,20 +299,15 @@ export const CaloriesPage = () => {
             <Stack gap="md">
               <Group justify="space-between">
                 <Text fw={600}>Daily calories</Text>
-                <Group gap="sm">
-                  <Badge color="teal" variant="light">
-                    {rangeLabel}
-                  </Badge>
-                  <SegmentedControl
-                    size="xs"
-                    value={chartMode}
-                    onChange={(value) => setChartMode(value as 'total' | 'parts')}
-                    data={[
-                      { label: 'Total', value: 'total' },
-                      { label: 'By part', value: 'parts' },
-                    ]}
-                  />
-                </Group>
+                <SegmentedControl
+                  size="xs"
+                  value={chartMode}
+                  onChange={(value) => setChartMode(value as 'total' | 'parts')}
+                  data={[
+                    { label: 'Total', value: 'total' },
+                    { label: 'By day part', value: 'parts' },
+                  ]}
+                />
               </Group>
               <div className={styles.sparkline}>
                 {isLoadingRange ? (
@@ -352,6 +360,14 @@ export const CaloriesPage = () => {
                     Highest day
                   </Text>
                   <Text fw={600}>{maxCalories !== null ? `${maxCalories.toFixed(0)} kcal` : '--'}</Text>
+                </div>
+                <div>
+                  <Text size="sm" c="dimmed">
+                    Avg calories
+                  </Text>
+                  <Text fw={600}>
+                    {averageCalories !== null ? `${averageCalories.toFixed(0)} kcal` : '--'}
+                  </Text>
                 </div>
                 <div>
                   <Text size="sm" c="dimmed">

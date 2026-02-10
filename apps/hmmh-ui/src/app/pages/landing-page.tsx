@@ -17,7 +17,7 @@ export const LandingPage = () => {
       <Center className={styles.content}>
         <Stack gap="lg" align="center" className={styles.stack}>
           <Title order={1} className={styles.title}>
-            Help me manage my health
+            Help me manage health
           </Title>
           <Text size="lg" className={styles.subtitle}>
             Calm daily tracking for weight and calories.
@@ -27,6 +27,12 @@ export const LandingPage = () => {
           </Button>
         </Stack>
       </Center>
+      <div className={styles.notice} role="status" aria-live="polite">
+        <Text size="sm">
+          Warning: this app was built with a suspiciously low amount of human
+          intelligence.
+        </Text>
+      </div>
     </div>
   );
 };
