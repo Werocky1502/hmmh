@@ -1,4 +1,4 @@
-import { Button, Table, Text } from '@mantine/core';
+import { Button, Group, Table, Text } from '@mantine/core';
 import { IconArrowLeft, IconTrash } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/auth-context';
@@ -7,6 +7,7 @@ import { DateRangeFilter } from '../../shared/date-range-filter/date-range-filte
 import { EntriesTable } from '../../shared/entries-table/entries-table';
 import { PageBlock } from '../../shared/page-block/page-block';
 import { PageShell } from '../../shared/page-shell/page-shell';
+import { ThemeToggle } from '../../shared/theme-toggle/theme-toggle';
 import { UserMenu } from '../../shared/user-menu/user-menu';
 import { CalorieEntryCard } from '../../shared/calorie-entry-card/calorie-entry-card';
 import { formatDisplayDate } from '../../utils/global-utils';
@@ -63,7 +64,12 @@ export const CaloriesPage = () => {
           Back to dashboard
         </Button>
       )}
-      rightSlot={<UserMenu userName={userName} onLogout={handleLogout} onDelete={handleDelete} />}
+      rightSlot={(
+        <Group gap="sm" justify="flex-end" wrap="nowrap">
+          <ThemeToggle />
+          <UserMenu userName={userName} onLogout={handleLogout} onDelete={handleDelete} />
+        </Group>
+      )}
     >
       <DateRangeFilter todayLabel={todayLabel} range={range} onChange={handleRangeChange} />
       {rangeError ? (

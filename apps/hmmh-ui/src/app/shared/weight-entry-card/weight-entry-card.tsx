@@ -1,4 +1,4 @@
-import { Button, Card, Group, NumberInput, Stack, Text, TextInput, Title } from '@mantine/core';
+import { Button, Card, Group, NumberInput, Stack, Text, TextInput } from '@mantine/core';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../auth/auth-context';
 import { getWeightByDate, upsertWeight } from '../../api/weights-api';
@@ -116,7 +116,9 @@ export const WeightEntryCard = ({
     <Card withBorder radius="lg" className={cardClasses}>
       <Stack gap={isStacked ? 'xs' : 'sm'} className={contentClasses}>
         <div className={headerClasses}>
-          <Title order={4}>{title}</Title>
+          <Text fw={600} size="md">
+            {title}
+          </Text>
         </div>
         <div className={isStacked ? styles.stackedBody : undefined}>
           <Group gap="md" className={formRowClasses}>

@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import * as ReactDOM from 'react-dom/client';
-import { MantineProvider, createTheme } from '@mantine/core';
+import { MantineProvider, createTheme, localStorageColorSchemeManager } from '@mantine/core';
 import { BrowserRouter } from 'react-router-dom';
 import '@mantine/core/styles.css';
 import '@mantine/charts/styles.css';
@@ -10,11 +10,11 @@ import { AuthProvider } from './app/auth/auth-context';
 import './styles.css';
 
 const theme = createTheme({
-  fontFamily: '"Space Grotesk", system-ui, sans-serif',
-  headings: { fontFamily: '"Fraunces", "Space Grotesk", serif' },
   primaryColor: 'teal',
   defaultRadius: 'md',
 });
+
+const colorSchemeManager = localStorageColorSchemeManager({ key: 'hmmh-color-scheme' });
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement,
@@ -22,7 +22,7 @@ const root = ReactDOM.createRoot(
 
 root.render(
   <StrictMode>
-    <MantineProvider theme={theme}>
+    <MantineProvider theme={theme} defaultColorScheme="auto" colorSchemeManager={colorSchemeManager}>
       <BrowserRouter>
         <AuthProvider>
           <App />

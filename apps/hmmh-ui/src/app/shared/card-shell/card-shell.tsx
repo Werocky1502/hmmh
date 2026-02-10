@@ -64,7 +64,9 @@ export const CardShell = ({
     >
       <Stack gap="md">
         <Group justify={headerAlign} className={headerClasses}>
-          <Text fw={600}>{title}</Text>
+          <Text fw={600} size="md">
+            {title}
+          </Text>
           {actions}
           {showBadge ? (
             <Badge color="teal" variant="light">

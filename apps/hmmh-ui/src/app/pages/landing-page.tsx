@@ -1,6 +1,7 @@
 import { Button, Center, Stack, Text, Title } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/auth-context';
+import { ThemeToggle } from '../shared/theme-toggle/theme-toggle';
 import styles from './landing-page.module.css';
 
 export const LandingPage = () => {
@@ -14,6 +15,9 @@ export const LandingPage = () => {
   return (
     <div className={styles.page}>
       <div className={styles.pattern} />
+      <div className={styles.themeToggle}>
+        <ThemeToggle />
+      </div>
       <Center className={styles.content}>
         <Stack gap="lg" align="center" className={styles.stack}>
           <Title order={1} className={styles.title}>

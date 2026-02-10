@@ -1,11 +1,13 @@
-import { Text } from '@mantine/core';
+import { ActionIcon, Group, Text } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/auth-context';
 import { useDocumentTitle } from '../../hooks/use-document-title';
 import { DateRangeFilter } from '../../shared/date-range-filter/date-range-filter';
 import { PageBlock } from '../../shared/page-block/page-block';
 import { PageShell } from '../../shared/page-shell/page-shell';
+import { ThemeToggle } from '../../shared/theme-toggle/theme-toggle';
 import { UserMenu } from '../../shared/user-menu/user-menu';
+import faviconUrl from '/favicon.svg';
 import styles from './dashboard-page.module.css';
 import { DashboardTodaySection } from './components/dashboard-today-section/dashboard-today-section';
 import { DashboardWidgetsSection } from './components/dashboard-widgets-section/dashboard-widgets-section';
@@ -46,7 +48,22 @@ export const DashboardPage = () => {
   return (
     <PageShell
       title="Help me manage health"
-      rightSlot={<UserMenu userName={userName} onLogout={handleLogout} onDelete={handleDelete} />}
+      leftSlot={(
+        <ActionIcon
+          variant="subtle"
+          size={64}
+          onClick={() => navigate('/')}
+          aria-label="Back to landing"
+        >
+          <img src={faviconUrl} alt="" className={styles.homeIcon} />
+        </ActionIcon>
+      )}
+      rightSlot={(
+        <Group gap="sm" justify="flex-end" wrap="nowrap">
+          <ThemeToggle />
+          <UserMenu userName={userName} onLogout={handleLogout} onDelete={handleDelete} />
+        </Group>
+      )}
     >
       <DateRangeFilter todayLabel={todayLabel} range={range} onChange={handleRangeChange} />
       {rangeError ? (

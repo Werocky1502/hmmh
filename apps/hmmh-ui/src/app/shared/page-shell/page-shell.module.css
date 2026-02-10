@@ -20,6 +20,8 @@
 .title {
   text-align: center;
   font-weight: 600;
+  font-size: var(--mantine-font-size-xl);
+  line-height: 1.2;
 }
 
 @media (max-width: 768px) {

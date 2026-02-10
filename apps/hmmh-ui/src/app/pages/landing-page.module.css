@@ -4,7 +4,7 @@
   position: relative;
   min-height: 100vh;
   background: linear-gradient(160deg, #f0ebe4 0%, #f7f4ee 45%, #e9f1f0 100%);
-  color: #112729;
+  color: var(--mantine-color-text);
   overflow: hidden;
 }
 
@@ -20,6 +20,13 @@
   background-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
   opacity: 0.95;
   pointer-events: none;
+}
+
+.themeToggle {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 2;
 }
 
 
@@ -42,7 +49,7 @@
 
 .subtitle {
   max-width: 520px;
-  color: #2f5458;
+  color: var(--mantine-color-dimmed);
 }
 
 .cta {
@@ -70,6 +77,26 @@
   transform-origin: center;
 }
 
+:global([data-mantine-color-scheme='dark']) .page {
+  background: linear-gradient(160deg, #1c2426 0%, #20292c 45%, #1a2123 100%);
+}
+
+:global([data-mantine-color-scheme='dark']) .pattern {
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(84, 171, 178, 0.22), transparent 55%),
+    radial-gradient(circle at 78% 12%, rgba(225, 170, 120, 0.2), transparent 60%),
+    radial-gradient(circle at 82% 78%, rgba(104, 186, 182, 0.22), transparent 60%),
+    linear-gradient(140deg, #1b2224 0%, #1f2729 38%, #191f21 100%);
+}
+
+:global([data-mantine-color-scheme='dark']) .notice {
+  background: rgba(224, 134, 74, 0.9);
+  color: #fff6eb;
+  box-shadow:
+    0 16px 30px rgba(24, 28, 30, 0.35),
+    0 0 0 1px rgba(255, 205, 160, 0.35) inset;
+}
+
 @keyframes noticeFloat {
   0%,
   100% {
@@ -83,5 +110,12 @@
 @media (prefers-reduced-motion: reduce) {
   .notice {
     animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .themeToggle {
+    top: 16px;
+    right: 16px;
   }
 }

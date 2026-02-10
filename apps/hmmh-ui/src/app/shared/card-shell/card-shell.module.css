@@ -10,6 +10,15 @@
   background: rgba(255, 255, 255, 0.95);
 }
 
+:global([data-mantine-color-scheme='dark']) .card,
+:global([data-mantine-color-scheme='dark']) .solid {
+  background: rgba(40, 46, 48, 0.96);
+}
+
+:global([data-mantine-color-scheme='dark']) .soft {
+  background: rgba(46, 52, 54, 0.92);
+}
+
 .header {
   flex-wrap: wrap;
   gap: 12px;

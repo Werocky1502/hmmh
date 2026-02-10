@@ -1,7 +1,11 @@
 .surface {
   min-height: 100vh;
   background: linear-gradient(180deg, #f7f3ee 0%, #f1f5f4 100%);
-  color: #102a2f;
+  color: var(--mantine-color-text);
+}
+
+:global([data-mantine-color-scheme='dark']) .surface {
+  background: linear-gradient(180deg, #1b2224 0%, #191f21 100%);
 }
 
 .section {

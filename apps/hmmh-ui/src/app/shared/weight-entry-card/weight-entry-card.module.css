@@ -2,6 +2,10 @@
   background: rgba(255, 255, 255, 0.98);
 }
 
+:global([data-mantine-color-scheme='dark']) .card {
+  background: rgba(40, 46, 48, 0.96);
+}
+
 .stackedCard {
   padding: 16px 18px;
   display: flex;
