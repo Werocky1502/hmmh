@@ -1,22 +1,22 @@
-using System.ComponentModel.DataAnnotations;
-
-namespace Hmmh.Api.Models;
+namespace Hmmh.Api.Contracts;
 
 /// <summary>
-///     Request payload for creating or updating a weight entry.
+///     Response payload for a stored weight entry.
 /// </summary>
-public sealed class WeightEntryRequest
+public sealed class WeightEntryResponse
 {
+    /// <summary>
+    ///     Unique identifier for the weight entry.
+    /// </summary>
+    public Guid Id { get; init; }
+
     /// <summary>
     ///     Date for the weight entry.
     /// </summary>
-    [Required]
     public DateOnly Date { get; init; }
 
     /// <summary>
     ///     Weight in kilograms.
     /// </summary>
-    [Range(20, 500)]
     public decimal WeightKg { get; init; }
 }
-

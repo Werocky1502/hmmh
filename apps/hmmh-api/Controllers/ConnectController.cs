@@ -1,13 +1,8 @@
-using System.Security.Claims;
-using Hmmh.Api.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Linq;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
-using Hmmh.Api.Data;
 using Hmmh.Api.Services;
 
 namespace Hmmh.Api.Controllers;
@@ -18,24 +13,15 @@ namespace Hmmh.Api.Controllers;
 [ApiController]
 public sealed class ConnectController : ControllerBase
 {
-    private readonly ILogger<ConnectController> logger;
-    private readonly HmmhDbContext dbContext;
-    private readonly IPasswordHasherService passwordHasher;
+    private readonly ITokenService tokenService;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="ConnectController" /> class.
     /// </summary>
-    /// <param name="dbContext">Database context for user operations.</param>
-    /// <param name="passwordHasher">Password hashing service.</param>
-    /// <param name="logger">Logger for token events.</param>
     public ConnectController(
-        HmmhDbContext dbContext,
-        IPasswordHasherService passwordHasher,
-        ILogger<ConnectController> logger)
+        ITokenService tokenService)
     {
-        this.dbContext = dbContext;
-        this.passwordHasher = passwordHasher;
-        this.logger = logger;
+        this.tokenService = tokenService;
     }
 
     /// <summary>
@@ -44,132 +30,60 @@ public sealed class ConnectController : ControllerBase
     /// <returns>OAuth token response handled by OpenIddict.</returns>
     [HttpPost("~/connect/token")]
     [Produces("application/json")]
-    public async Task<IActionResult> Exchange()
+    public async Task<IActionResult> Exchange(CancellationToken cancellationToken)
     {
+        // Dispatch the request to the appropriate token flow.
         var request = HttpContext.Features.Get<OpenIddictServerAspNetCoreFeature>()?.Transaction?.Request
             ?? throw new InvalidOperationException("OpenIddict request cannot be resolved.");
 
         if (request.IsPasswordGrantType())
         {
-            return await HandlePasswordGrantAsync(request);
+            var result = await tokenService.HandlePasswordGrantAsync(request, cancellationToken);
+            return BuildTokenResponse(result);
         }
 
         if (request.IsRefreshTokenGrantType())
         {
-            return await HandleRefreshGrantAsync(request);
+            return await HandleRefreshGrantAsync(request, cancellationToken);
         }
 
-        return Forbid(BuildError(OpenIddictConstants.Errors.UnsupportedGrantType, "Unsupported grant type."),
+        return Forbid(OpenIddictErrorBuilder.BuildError(OpenIddictConstants.Errors.UnsupportedGrantType, "Unsupported grant type."),
             OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }
 
-    private async Task<IActionResult> HandlePasswordGrantAsync(OpenIddictRequest request)
+    private async Task<IActionResult> HandleRefreshGrantAsync(
+        OpenIddictRequest request,
+        CancellationToken cancellationToken)
     {
-        var login = NormalizeLogin(request.Username);
-        var user = await dbContext.Users
-            .AsNoTracking()
-            .FirstOrDefaultAsync(candidate => candidate.UserName == login);
-        if (user is null)
-        {
-            return Forbid(BuildError(OpenIddictConstants.Errors.InvalidGrant, "Invalid login or password."),
-                OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
-        }
-
-        var isValid = passwordHasher.VerifyPassword(request.Password ?? string.Empty, user.PasswordHash);
-        if (!isValid)
-        {
-            return Forbid(BuildError(OpenIddictConstants.Errors.InvalidGrant, "Invalid login or password."),
-                OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
-        }
-
-        var scopes = request.GetScopes().Intersect(new[] { "api", OpenIddictConstants.Scopes.OfflineAccess })
-            .ToArray();
-        var principal = BuildPrincipal(user, scopes);
-
-        logger.LogInformation("Issued access token for user {UserId}.", user.Id);
-        return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
-    }
-
-    private async Task<IActionResult> HandleRefreshGrantAsync(OpenIddictRequest request)
-    {
+        // Validate the refresh token before issuing a new access token.
         var authenticateResult = await HttpContext.AuthenticateAsync(
             OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
 
         if (!authenticateResult.Succeeded || authenticateResult.Principal is null)
         {
-            return Forbid(BuildError(OpenIddictConstants.Errors.InvalidGrant, "Invalid refresh token."),
+            return Forbid(OpenIddictErrorBuilder.BuildError(OpenIddictConstants.Errors.InvalidGrant, "Invalid refresh token."),
                 OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
         }
 
-        var userIdValue = authenticateResult.Principal.FindFirstValue(OpenIddictConstants.Claims.Subject);
-        if (!Guid.TryParse(userIdValue, out var userId))
-        {
-            return Forbid(BuildError(OpenIddictConstants.Errors.InvalidGrant, "User identifier is missing."),
-                OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
-        }
+        var result = await tokenService.HandleRefreshGrantAsync(
+            request,
+            authenticateResult.Principal,
+            cancellationToken);
 
-        var user = await dbContext.Users
-            .AsNoTracking()
-            .FirstOrDefaultAsync(candidate => candidate.Id == userId);
-        if (user is null)
-        {
-            return Forbid(BuildError(OpenIddictConstants.Errors.InvalidGrant, "User no longer exists."),
-                OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
-        }
-        var scopes = request.GetScopes();
-        if (!scopes.Any())
-        {
-            scopes = authenticateResult.Principal.GetScopes();
-        }
-
-        var principal = BuildPrincipal(user, scopes);
-
-        logger.LogInformation("Refreshed access token for user {UserId}.", user.Id);
-        return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+        return BuildTokenResponse(result);
     }
 
-    private static ClaimsPrincipal BuildPrincipal(ApplicationUser user, IEnumerable<string> scopes)
+    private static IActionResult BuildTokenResponse(TokenExchangeResult result)
     {
-        var scopeList = scopes.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
-        var identity = new ClaimsIdentity(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
-        identity.AddClaim(OpenIddictConstants.Claims.Subject, user.Id.ToString("D"));
-        identity.AddClaim(OpenIddictConstants.Claims.Name, user.UserName);
-
-        foreach (var claim in identity.Claims)
+        // Convert the token exchange result into an HTTP response.
+        if (result.IsSuccessful && result.Principal is not null)
         {
-            claim.SetDestinations(GetDestinations(claim, scopeList));
+            return new SignInResult(
+                OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
+                result.Principal,
+                null);
         }
 
-        var principal = new ClaimsPrincipal(identity);
-        principal.SetScopes(scopeList);
-        principal.SetResources("hmmh-api");
-        return principal;
-    }
-
-    private static IEnumerable<string> GetDestinations(Claim claim, IReadOnlyCollection<string> scopes)
-    {
-        var destinations = new List<string> { OpenIddictConstants.Destinations.AccessToken };
-
-        if (scopes.Contains(OpenIddictConstants.Scopes.OpenId)
-            && (claim.Type == OpenIddictConstants.Claims.Subject || claim.Type == OpenIddictConstants.Claims.Name))
-        {
-            destinations.Add(OpenIddictConstants.Destinations.IdentityToken);
-        }
-
-        return destinations;
-    }
-
-    private static AuthenticationProperties BuildError(string error, string description)
-    {
-        return new AuthenticationProperties(new Dictionary<string, string?>
-        {
-            [OpenIddictConstants.Parameters.Error] = error,
-            [OpenIddictConstants.Parameters.ErrorDescription] = description,
-        });
-    }
-
-    private static string NormalizeLogin(string? login)
-    {
-        return (login ?? string.Empty).Trim().ToLowerInvariant();
+        return new ForbidResult(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme, result.ErrorProperties);
     }
 }

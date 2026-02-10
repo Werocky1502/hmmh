@@ -1,4 +1,4 @@
-namespace Hmmh.Api.Models;
+namespace Hmmh.Api.Contracts;
 
 /// <summary>
 ///     Response payload for API status checks.

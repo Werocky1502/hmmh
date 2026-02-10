@@ -1,9 +1,8 @@
-using Hmmh.Api.Data;
+using Hmmh.Api.Contracts;
 using Hmmh.Api.Models;
 using Hmmh.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Hmmh.Api.Controllers;
 
@@ -14,29 +13,21 @@ namespace Hmmh.Api.Controllers;
 [Route("api/auth")]
 public sealed class AuthController : ControllerBase
 {
-    private readonly ILogger<AuthController> logger;
+    private readonly IAuthService authService;
     private readonly ICurrentUserAccessor currentUser;
-    private readonly HmmhDbContext dbContext;
-    private readonly IPasswordHasherService passwordHasher;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="AuthController" /> class.
     /// </summary>
-    /// <param name="dbContext">Database context for user operations.</param>
-    /// <param name="passwordHasher">Password hashing service.</param>
+    /// <param name="authService">Auth service for account workflows.</param>
     /// <param name="currentUser">Accessor for the current user.</param>
-    /// <param name="logger">Logger for auth events.</param>
     public AuthController(
-        HmmhDbContext dbContext,
-        IPasswordHasherService passwordHasher,
-        ICurrentUserAccessor currentUser,
-        ILogger<AuthController> logger)
+        IAuthService authService,
+        ICurrentUserAccessor currentUser)
     {
         // Capture dependencies needed for authentication workflows.
-        this.dbContext = dbContext;
-        this.passwordHasher = passwordHasher;
+        this.authService = authService;
         this.currentUser = currentUser;
-        this.logger = logger;
     }
 
     /// <summary>
@@ -47,36 +38,13 @@ public sealed class AuthController : ControllerBase
     [HttpPost("sign-up")]
     [ProducesResponseType(typeof(AccountResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<ActionResult<AccountResponse>> SignUp([FromBody] AuthRequest request)
+    public async Task<ActionResult<AccountResponse>> SignUp(
+        [FromBody] AuthRequest request,
+        CancellationToken cancellationToken)
     {
-        // Reject duplicate logins early to keep errors explicit.
-        var login = NormalizeLogin(request.Login);
-        if (string.IsNullOrWhiteSpace(login))
-        {
-            return BadRequest(new { message = "Login is required." });
-        }
-        var existingUser = await dbContext.Users
-            .AsNoTracking()
-            .AnyAsync(user => user.UserName == login);
-        if (existingUser)
-        {
-            return Conflict(new { message = "Login already exists." });
-        }
-
-        var user = new ApplicationUser
-        {
-            UserName = login,
-            PasswordHash = passwordHasher.HashPassword(request.Password),
-        };
-
-        dbContext.Users.Add(user);
-        await dbContext.SaveChangesAsync();
-
-        logger.LogInformation("Created new user {Login}.", login);
-        return Ok(new AccountResponse
-        {
-            UserName = user.UserName,
-        });
+        // Delegate sign-up logic to the auth service.
+        var response = await authService.SignUpAsync(request, cancellationToken);
+        return Ok(response);
     }
 
     /// <summary>
@@ -87,25 +55,10 @@ public sealed class AuthController : ControllerBase
     [HttpDelete("delete")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> DeleteAccount()
+    public async Task<IActionResult> DeleteAccount(CancellationToken cancellationToken)
     {
-        var user = await dbContext.Users
-            .FirstOrDefaultAsync(candidate => candidate.Id == currentUser.UserId);
-        if (user is null)
-        {
-            return NotFound(new { message = "Account does not exists." });
-        }
-
-        dbContext.Users.Remove(user);
-        await dbContext.SaveChangesAsync();
-
-        logger.LogInformation("Deleted account {Login}.", user.UserName);
+        // Delegate account deletion to the auth service.
+        await authService.DeleteAccountAsync(currentUser.UserId, cancellationToken);
         return NoContent();
     }
-
-    private static string NormalizeLogin(string login)
-    {
-        return login.Trim().ToLowerInvariant();
-    }
-
 }
