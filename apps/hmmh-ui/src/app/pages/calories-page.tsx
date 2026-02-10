@@ -37,7 +37,7 @@ import styles from './calories-page.module.css';
 
 export const CaloriesPage = () => {
   useDocumentTitle('HMMH (Calories)');
-  const { userName, signOut, deleteAccount, token } = useAuth();
+  const { userName, signOut, deleteAccount, getAccessToken } = useAuth();
   const navigate = useNavigate();
   const { start, end } = useMemo(() => getDefaultTwoWeekRange(), []);
   const [startDate, setStartDate] = useState(start);
@@ -167,6 +167,7 @@ export const CaloriesPage = () => {
   };
 
   const loadRange = useCallback(async () => {
+    const token = await getAccessToken();
     if (!token) {
       return;
     }
@@ -183,7 +184,7 @@ export const CaloriesPage = () => {
     } finally {
       setIsLoadingRange(false);
     }
-  }, [token, startDate, endDate]);
+  }, [getAccessToken, startDate, endDate]);
 
   useEffect(() => {
     void loadRange();
@@ -213,6 +214,7 @@ export const CaloriesPage = () => {
   };
 
   const handleDeleteEntry = async (id: string) => {
+    const token = await getAccessToken();
     if (!token) {
       return;
     }

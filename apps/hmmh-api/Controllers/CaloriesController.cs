@@ -1,7 +1,7 @@
 using Hmmh.Api.Data;
 using Hmmh.Api.Models;
+using Hmmh.Api.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,22 +17,22 @@ public sealed class CaloriesController : ControllerBase
 {
     private readonly HmmhDbContext dbContext;
     private readonly ILogger<CaloriesController> logger;
-    private readonly UserManager<ApplicationUser> userManager;
+    private readonly ICurrentUserAccessor currentUser;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="CaloriesController" /> class.
     /// </summary>
     /// <param name="dbContext">Database context for calorie data.</param>
-    /// <param name="userManager">User manager for Identity operations.</param>
+    /// <param name="currentUser">Accessor for the current user.</param>
     /// <param name="logger">Logger for calorie activity.</param>
     public CaloriesController(
         HmmhDbContext dbContext,
-        UserManager<ApplicationUser> userManager,
+        ICurrentUserAccessor currentUser,
         ILogger<CaloriesController> logger)
     {
         // Capture dependencies required for calorie tracking.
         this.dbContext = dbContext;
-        this.userManager = userManager;
+        this.currentUser = currentUser;
         this.logger = logger;
     }
 
@@ -47,15 +47,9 @@ public sealed class CaloriesController : ControllerBase
     public async Task<ActionResult<IReadOnlyList<CalorieEntryResponse>>> GetCaloriesByDate([FromRoute] DateOnly date)
     {
         // Look up the current user and return their calorie entries for the requested date.
-        var user = await GetCurrentUserAsync();
-        if (user is null)
-        {
-            return Unauthorized(new { message = "Unable to locate account." });
-        }
-
         var entries = await dbContext.CalorieEntries
             .AsNoTracking()
-            .Where(entry => entry.UserId == user.Id && entry.EntryDate == date)
+            .Where(entry => entry.UserId == currentUser.UserId && entry.EntryDate == date)
             .OrderBy(entry => entry.Id)
             .ToListAsync();
 
@@ -83,15 +77,9 @@ public sealed class CaloriesController : ControllerBase
             return BadRequest(new { message = "End date must be on or after the start date." });
         }
 
-        var user = await GetCurrentUserAsync();
-        if (user is null)
-        {
-            return Unauthorized(new { message = "Unable to locate account." });
-        }
-
         var entries = await dbContext.CalorieEntries
             .AsNoTracking()
-            .Where(entry => entry.UserId == user.Id)
+            .Where(entry => entry.UserId == currentUser.UserId)
             .Where(entry => entry.EntryDate >= startDate && entry.EntryDate <= endDate)
             .OrderBy(entry => entry.EntryDate)
             .ThenBy(entry => entry.Id)
@@ -118,16 +106,10 @@ public sealed class CaloriesController : ControllerBase
             return ValidationProblem(ModelState);
         }
 
-        var user = await GetCurrentUserAsync();
-        if (user is null)
-        {
-            return Unauthorized(new { message = "Unable to locate account." });
-        }
-
         var entry = new CalorieEntry
         {
             Id = Guid.NewGuid(),
-            UserId = user.Id,
+            UserId = currentUser.UserId,
             EntryDate = request.Date,
             Calories = request.Calories,
             FoodName = NormalizeText(request.FoodName),
@@ -137,7 +119,7 @@ public sealed class CaloriesController : ControllerBase
 
         dbContext.CalorieEntries.Add(entry);
         await dbContext.SaveChangesAsync();
-        logger.LogInformation("Saved calorie entry for user {UserId} on {Date}.", user.Id, request.Date);
+        logger.LogInformation("Saved calorie entry for user {UserId} on {Date}.", currentUser.UserId, request.Date);
 
         return Ok(BuildResponse(entry));
     }
@@ -154,14 +136,8 @@ public sealed class CaloriesController : ControllerBase
     public async Task<IActionResult> DeleteCalorie([FromRoute] Guid id)
     {
         // Remove a calorie entry that belongs to the current user.
-        var user = await GetCurrentUserAsync();
-        if (user is null)
-        {
-            return Unauthorized(new { message = "Unable to locate account." });
-        }
-
         var entry = await dbContext.CalorieEntries
-            .FirstOrDefaultAsync(calorie => calorie.Id == id && calorie.UserId == user.Id);
+            .FirstOrDefaultAsync(calorie => calorie.Id == id && calorie.UserId == currentUser.UserId);
 
         if (entry is null)
         {
@@ -170,7 +146,7 @@ public sealed class CaloriesController : ControllerBase
 
         dbContext.CalorieEntries.Remove(entry);
         await dbContext.SaveChangesAsync();
-        logger.LogInformation("Deleted calorie entry {EntryId} for user {UserId}.", id, user.Id);
+        logger.LogInformation("Deleted calorie entry {EntryId} for user {UserId}.", id, currentUser.UserId);
 
         return NoContent();
     }
@@ -200,9 +176,4 @@ public sealed class CaloriesController : ControllerBase
         return value.Trim();
     }
 
-    private async Task<ApplicationUser?> GetCurrentUserAsync()
-    {
-        // Resolve the current Identity user from the JWT claims.
-        return await userManager.GetUserAsync(User);
-    }
 }

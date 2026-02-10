@@ -1,7 +1,7 @@
 using Hmmh.Api.Data;
 using Hmmh.Api.Models;
+using Hmmh.Api.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,22 +17,22 @@ public sealed class WeightsController : ControllerBase
 {
     private readonly HmmhDbContext dbContext;
     private readonly ILogger<WeightsController> logger;
-    private readonly UserManager<ApplicationUser> userManager;
+    private readonly ICurrentUserAccessor currentUser;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="WeightsController" /> class.
     /// </summary>
     /// <param name="dbContext">Database context for weight data.</param>
-    /// <param name="userManager">User manager for Identity operations.</param>
+    /// <param name="currentUser">Accessor for the current user.</param>
     /// <param name="logger">Logger for weight activity.</param>
     public WeightsController(
         HmmhDbContext dbContext,
-        UserManager<ApplicationUser> userManager,
+        ICurrentUserAccessor currentUser,
         ILogger<WeightsController> logger)
     {
         // Capture dependencies required for weight tracking.
         this.dbContext = dbContext;
-        this.userManager = userManager;
+        this.currentUser = currentUser;
         this.logger = logger;
     }
 
@@ -47,15 +47,9 @@ public sealed class WeightsController : ControllerBase
     public async Task<ActionResult<WeightEntryResponse>> GetWeightByDate([FromRoute] DateOnly date)
     {
         // Look up the current user and return their weight entry for the requested date.
-        var user = await GetCurrentUserAsync();
-        if (user is null)
-        {
-            return Unauthorized(new { message = "Unable to locate account." });
-        }
-
         var entry = await dbContext.WeightEntries
             .AsNoTracking()
-            .FirstOrDefaultAsync(weight => weight.UserId == user.Id && weight.EntryDate == date);
+            .FirstOrDefaultAsync(weight => weight.UserId == currentUser.UserId && weight.EntryDate == date);
 
         if (entry is null)
         {
@@ -90,15 +84,9 @@ public sealed class WeightsController : ControllerBase
             return BadRequest(new { message = "End date must be on or after the start date." });
         }
 
-        var user = await GetCurrentUserAsync();
-        if (user is null)
-        {
-            return Unauthorized(new { message = "Unable to locate account." });
-        }
-
         var entries = await dbContext.WeightEntries
             .AsNoTracking()
-            .Where(weight => weight.UserId == user.Id)
+            .Where(weight => weight.UserId == currentUser.UserId)
             .Where(weight => weight.EntryDate >= startDate && weight.EntryDate <= endDate)
             .OrderBy(weight => weight.EntryDate)
             .ToListAsync();
@@ -124,21 +112,15 @@ public sealed class WeightsController : ControllerBase
             return ValidationProblem(ModelState);
         }
 
-        var user = await GetCurrentUserAsync();
-        if (user is null)
-        {
-            return Unauthorized(new { message = "Unable to locate account." });
-        }
-
         var entry = await dbContext.WeightEntries
-            .FirstOrDefaultAsync(weight => weight.UserId == user.Id && weight.EntryDate == request.Date);
+            .FirstOrDefaultAsync(weight => weight.UserId == currentUser.UserId && weight.EntryDate == request.Date);
 
         if (entry is null)
         {
             entry = new WeightEntry
             {
                 Id = Guid.NewGuid(),
-                UserId = user.Id,
+                UserId = currentUser.UserId,
                 EntryDate = request.Date,
                 WeightKg = request.WeightKg,
             };
@@ -150,7 +132,7 @@ public sealed class WeightsController : ControllerBase
         }
 
         await dbContext.SaveChangesAsync();
-        logger.LogInformation("Saved weight entry for user {UserId} on {Date}.", user.Id, request.Date);
+        logger.LogInformation("Saved weight entry for user {UserId} on {Date}.", currentUser.UserId, request.Date);
 
         return Ok(BuildResponse(entry));
     }
@@ -167,14 +149,8 @@ public sealed class WeightsController : ControllerBase
     public async Task<IActionResult> DeleteWeight([FromRoute] Guid id)
     {
         // Remove a weight entry that belongs to the current user.
-        var user = await GetCurrentUserAsync();
-        if (user is null)
-        {
-            return Unauthorized(new { message = "Unable to locate account." });
-        }
-
         var entry = await dbContext.WeightEntries
-            .FirstOrDefaultAsync(weight => weight.Id == id && weight.UserId == user.Id);
+            .FirstOrDefaultAsync(weight => weight.Id == id && weight.UserId == currentUser.UserId);
 
         if (entry is null)
         {
@@ -183,7 +159,7 @@ public sealed class WeightsController : ControllerBase
 
         dbContext.WeightEntries.Remove(entry);
         await dbContext.SaveChangesAsync();
-        logger.LogInformation("Deleted weight entry {EntryId} for user {UserId}.", id, user.Id);
+        logger.LogInformation("Deleted weight entry {EntryId} for user {UserId}.", id, currentUser.UserId);
 
         return NoContent();
     }
@@ -199,9 +175,4 @@ public sealed class WeightsController : ControllerBase
         };
     }
 
-    private async Task<ApplicationUser?> GetCurrentUserAsync()
-    {
-        // Resolve the current Identity user from the JWT claims.
-        return await userManager.GetUserAsync(User);
-    }
 }

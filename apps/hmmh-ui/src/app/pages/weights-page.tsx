@@ -36,7 +36,7 @@ import styles from './weights-page.module.css';
 
 export const WeightsPage = () => {
   useDocumentTitle('HMMH (Weights)');
-  const { userName, signOut, deleteAccount, token } = useAuth();
+  const { userName, signOut, deleteAccount, getAccessToken } = useAuth();
   const navigate = useNavigate();
   const { start, end } = useMemo(() => getDefaultTwoWeekRange(), []);
   const [startDate, setStartDate] = useState(start);
@@ -100,6 +100,7 @@ export const WeightsPage = () => {
   };
 
   const loadRange = useCallback(async () => {
+    const token = await getAccessToken();
     if (!token) {
       return;
     }
@@ -116,7 +117,7 @@ export const WeightsPage = () => {
     } finally {
       setIsLoadingRange(false);
     }
-  }, [token, startDate, endDate]);
+  }, [getAccessToken, startDate, endDate]);
 
   useEffect(() => {
     void loadRange();
@@ -146,6 +147,7 @@ export const WeightsPage = () => {
   };
 
   const handleDeleteEntry = async (id: string) => {
+    const token = await getAccessToken();
     if (!token) {
       return;
     }

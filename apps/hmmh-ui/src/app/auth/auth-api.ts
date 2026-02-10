@@ -1,27 +1,15 @@
 import { buildApiUrl, ensureSuccess } from '../api/api-client';
 
-export interface AuthResponse {
-  token: string;
-  userName: string;
-}
-
 export interface AuthRequest {
   login: string;
   password: string;
 }
 
-export const signIn = async (request: AuthRequest): Promise<AuthResponse> => {
-  const response = await fetch(buildApiUrl('/api/auth/sign-in'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(request),
-  });
+export interface SignUpResponse {
+  userName: string;
+}
 
-  await ensureSuccess(response);
-  return (await response.json()) as AuthResponse;
-};
-
-export const signUp = async (request: AuthRequest): Promise<AuthResponse> => {
+export const signUp = async (request: AuthRequest): Promise<SignUpResponse> => {
   const response = await fetch(buildApiUrl('/api/auth/sign-up'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -29,7 +17,7 @@ export const signUp = async (request: AuthRequest): Promise<AuthResponse> => {
   });
 
   await ensureSuccess(response);
-  return (await response.json()) as AuthResponse;
+  return (await response.json()) as SignUpResponse;
 };
 
 export const deleteAccount = async (token: string): Promise<void> => {

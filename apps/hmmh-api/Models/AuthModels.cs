@@ -23,47 +23,12 @@ public sealed class AuthRequest
 }
 
 /// <summary>
-///     Authentication response containing the issued JWT token.
+///     Response payload for user management actions.
 /// </summary>
-public sealed class AuthResponse
+public sealed class AccountResponse
 {
-    /// <summary>
-    ///     JWT token for authenticated API access.
-    /// </summary>
-    public string Token { get; init; } = string.Empty;
-
     /// <summary>
     ///     Display login for the authenticated user.
     /// </summary>
     public string UserName { get; init; } = string.Empty;
-}
-
-/// <summary>
-///     JWT configuration settings from app configuration.
-/// </summary>
-public sealed class JwtSettings
-{
-    /// <summary>
-    ///     Symmetric signing key for JWT tokens.
-    /// </summary>
-    [Required]
-    public string Key { get; init; } = string.Empty;
-
-    /// <summary>
-    ///     Issuer claim for generated tokens.
-    /// </summary>
-    [Required]
-    public string Issuer { get; init; } = string.Empty;
-
-    /// <summary>
-    ///     Audience claim for generated tokens.
-    /// </summary>
-    [Required]
-    public string Audience { get; init; } = string.Empty;
-
-    /// <summary>
-    ///     Token lifetime in minutes.
-    /// </summary>
-    [Range(1, 1440)]
-    public int TokenMinutes { get; init; } = 120;
 }

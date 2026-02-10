@@ -13,7 +13,7 @@ interface WeightTodayCardProps {
 }
 
 export const WeightTodayCard = ({ date, onDateChange, allowDateChange, onSaved }: WeightTodayCardProps) => {
-  const { token } = useAuth();
+  const { getAccessToken } = useAuth();
   const todayDate = useMemo(() => getTodayDateString(), []);
   const entryDate = date ? toDateInputValue(date) : todayDate;
   const [value, setValue] = useState<number | string>('');
@@ -22,6 +22,7 @@ export const WeightTodayCard = ({ date, onDateChange, allowDateChange, onSaved }
   const [error, setError] = useState<string | null>(null);
 
   const loadWeight = useCallback(async () => {
+    const token = await getAccessToken();
     if (!token) {
       setIsLoading(false);
       return;
@@ -41,14 +42,19 @@ export const WeightTodayCard = ({ date, onDateChange, allowDateChange, onSaved }
     } finally {
       setIsLoading(false);
     }
-  }, [token, entryDate]);
+  }, [getAccessToken, entryDate]);
 
   useEffect(() => {
     void loadWeight();
   }, [loadWeight]);
 
   const handleSave = async () => {
-    if (!token || typeof value !== 'number') {
+    if (typeof value !== 'number') {
+      return;
+    }
+
+    const token = await getAccessToken();
+    if (!token) {
       return;
     }
 

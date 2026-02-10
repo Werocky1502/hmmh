@@ -51,7 +51,7 @@ const renderWeightTooltip = ({ payload }: TooltipProps<number, string>) => {
 
 export const DashboardPage = () => {
   useDocumentTitle('HMMH (Dashboard)');
-  const { userName, signOut, deleteAccount, token } = useAuth();
+  const { userName, signOut, deleteAccount, getAccessToken } = useAuth();
   const navigate = useNavigate();
   const { start, end } = useMemo(() => getDefaultDashboardRange(), []);
   const [startDate, setStartDate] = useState(start);
@@ -142,6 +142,7 @@ export const DashboardPage = () => {
   };
 
   const loadRange = useCallback(async () => {
+    const token = await getAccessToken();
     if (!token) {
       return;
     }
@@ -160,9 +161,10 @@ export const DashboardPage = () => {
     } finally {
       setIsLoadingRange(false);
     }
-  }, [token, startDate, endDate]);
+  }, [getAccessToken, startDate, endDate]);
 
   const loadCaloriesRange = useCallback(async () => {
+    const token = await getAccessToken();
     if (!token) {
       return;
     }
@@ -181,7 +183,7 @@ export const DashboardPage = () => {
     } finally {
       setIsLoadingCalories(false);
     }
-  }, [token, startDate, endDate]);
+  }, [getAccessToken, startDate, endDate]);
 
   useEffect(() => {
     void loadRange();

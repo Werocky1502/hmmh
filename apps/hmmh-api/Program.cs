@@ -1,10 +1,10 @@
 using Hmmh.Api.Data;
 using Hmmh.Api.Models;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
+using Hmmh.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
+using OpenIddict.Abstractions;
+using OpenIddict.Validation.AspNetCore;
 
 namespace Hmmh.Api;
 
@@ -18,7 +18,7 @@ public static class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        ConfigureServices(builder.Services, builder.Configuration);
+        ConfigureServices(builder.Services, builder.Configuration, builder.Environment);
 
         var app = builder.Build();
 
@@ -32,52 +32,69 @@ public static class Program
     /// </summary>
     /// <param name="services">Service collection for dependency injection.</param>
     /// <param name="configuration">Application configuration.</param>
-    private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
+    private static void ConfigureServices(
+        IServiceCollection services,
+        IConfiguration configuration,
+        IWebHostEnvironment environment)
     {
         // Register MVC controllers to follow REST API conventions.
         services.AddControllers();
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentUserAccessor, CurrentUserAccessor>();
 
         // Configure EF Core with PostgreSQL for the main application database.
         services.AddDbContext<HmmhDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("HmmhDatabase")));
 
-        // Configure Identity for login/password authentication only.
-        services.AddIdentityCore<ApplicationUser>(options =>
+        // Provide a local password hashing service for user credentials.
+        services.AddSingleton<IPasswordHasherService, PasswordHasherService>();
+
+        var accessTokenMinutes = configuration.GetValue("OpenIddict:AccessTokenMinutes", 30);
+        var refreshTokenDays = configuration.GetValue("OpenIddict:RefreshTokenDays", 30);
+
+        services.AddOpenIddict()
+            .AddCore(options =>
             {
-                options.Password.RequiredLength = 8;
-                options.Password.RequireDigit = false;
-                options.Password.RequireLowercase = false;
-                options.Password.RequireUppercase = false;
-                options.Password.RequireNonAlphanumeric = false;
-                options.User.RequireUniqueEmail = false;
+                options.UseEntityFrameworkCore()
+                    .UseDbContext<HmmhDbContext>();
             })
-            .AddSignInManager()
-            .AddEntityFrameworkStores<HmmhDbContext>();
-
-        // Bind JWT settings from configuration.
-        services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
-        var jwtSettings = configuration.GetSection("Jwt").Get<JwtSettings>() ?? new JwtSettings();
-        var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key));
-
-        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
+            .AddServer(options =>
             {
-                options.TokenValidationParameters = new TokenValidationParameters
+                options.SetTokenEndpointUris("/connect/token");
+                options.AllowPasswordFlow();
+                options.AllowRefreshTokenFlow();
+                options.AcceptAnonymousClients();
+                options.RegisterScopes(OpenIddictConstants.Scopes.OpenId, "api", OpenIddictConstants.Scopes.OfflineAccess);
+                options.SetAccessTokenLifetime(TimeSpan.FromMinutes(accessTokenMinutes));
+                options.SetRefreshTokenLifetime(TimeSpan.FromDays(refreshTokenDays));
+
+                options.AddDevelopmentEncryptionCertificate();
+                options.AddDevelopmentSigningCertificate();
+
+                var aspNetCore = options.UseAspNetCore()
+                    .EnableTokenEndpointPassthrough();
+
+                if (environment.IsDevelopment())
                 {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = jwtSettings.Issuer,
-                    ValidAudience = jwtSettings.Audience,
-                    IssuerSigningKey = signingKey,
-                    ClockSkew = TimeSpan.FromMinutes(2),
-                };
+                    aspNetCore.DisableTransportSecurityRequirement();
+                }
+            })
+            .AddValidation(options =>
+            {
+                options.UseLocalServer();
+                options.UseAspNetCore();
             });
 
-        services.AddAuthorization();
+        services.AddAuthentication(OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme);
+        services.AddAuthorization(options =>
+        {
+            options.DefaultPolicy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .RequireClaim(OpenIddictConstants.Claims.Subject)
+                .Build();
+        });
 
         // Allow the UI app to call the API from configured origins.
         var allowedOrigins = configuration.GetSection("AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
@@ -114,6 +131,42 @@ public static class Program
             dbContext.Database.Migrate();
         }
 
+        SeedOpenIddictAsync(app.Services).GetAwaiter().GetResult();
+
         app.MapControllers();
+    }
+
+    /// <summary>
+    ///     Ensures OpenIddict clients are registered for local development.
+    /// </summary>
+    /// <param name="services">Root service provider.</param>
+    private static async Task SeedOpenIddictAsync(IServiceProvider services)
+    {
+        using var scope = services.CreateScope();
+        var manager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
+
+        var existing = await manager.FindByClientIdAsync("hmmh-ui");
+        var descriptor = new OpenIddictApplicationDescriptor
+        {
+            ClientId = "hmmh-ui",
+            DisplayName = "HMMH UI",
+            ClientType = OpenIddictConstants.ClientTypes.Public,
+            ConsentType = OpenIddictConstants.ConsentTypes.Implicit,
+        };
+
+        descriptor.Permissions.Add(OpenIddictConstants.Permissions.Endpoints.Token);
+        descriptor.Permissions.Add(OpenIddictConstants.Permissions.GrantTypes.Password);
+        descriptor.Permissions.Add(OpenIddictConstants.Permissions.GrantTypes.RefreshToken);
+        descriptor.Permissions.Add(OpenIddictConstants.Permissions.Prefixes.Scope + OpenIddictConstants.Scopes.OpenId);
+        descriptor.Permissions.Add(OpenIddictConstants.Permissions.Prefixes.Scope + OpenIddictConstants.Scopes.OfflineAccess);
+        descriptor.Permissions.Add(OpenIddictConstants.Permissions.Prefixes.Scope + "api");
+
+        if (existing is null)
+        {
+            await manager.CreateAsync(descriptor);
+            return;
+        }
+
+        await manager.UpdateAsync(existing, descriptor);
     }
 }

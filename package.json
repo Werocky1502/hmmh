@@ -53,9 +53,11 @@
     "@mantine/hooks": "^8.3.14",
     "@tabler/icons-react": "^3.36.1",
     "dayjs": "^1.11.12",
-    "recharts": "^2.15.1",
+    "oidc-client-ts": "^3.4.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-router-dom": "^6.30.0"
+    "react-oidc-context": "^3.3.0",
+    "react-router-dom": "^6.30.0",
+    "recharts": "^2.15.1"
   }
 }

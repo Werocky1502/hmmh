@@ -18,9 +18,13 @@ export const ensureSuccess = async (response: Response) => {
   let message = `Request failed (${response.status})`;
 
   try {
-    const body = (await response.json()) as { message?: string };
+    const body = (await response.json()) as { message?: string; error_description?: string; error?: string };
     if (body?.message) {
       message = body.message;
+    } else if (body?.error_description) {
+      message = body.error_description;
+    } else if (body?.error) {
+      message = body.error;
     }
   } catch {
     // Ignore parse errors and keep the default message.

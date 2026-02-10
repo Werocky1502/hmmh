@@ -1,16 +1,13 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useMemo } from 'react';
 import type { ReactNode } from 'react';
-import { deleteAccount as deleteAccountRequest, signIn, signUp } from './auth-api';
-
-interface AuthSession {
-  token: string;
-  userName: string;
-}
+import { AuthProvider as OidcAuthProvider, useAuth as useOidcAuth } from 'react-oidc-context';
+import { getUserManager } from './oidc-client';
+import { deleteAccount as deleteAccountRequest, signUp } from './auth-api';
 
 interface AuthContextValue {
   isAuthenticated: boolean;
   userName: string | null;
-  token: string | null;
+  getAccessToken: () => Promise<string | null>;
   signInWithPassword: (login: string, password: string) => Promise<void>;
   signUpWithPassword: (login: string, password: string) => Promise<void>;
   signOut: () => void;
@@ -19,73 +16,74 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const tokenKey = 'hmmh.auth.token';
-const userKey = 'hmmh.auth.user';
-
-const loadSession = (): AuthSession | null => {
-  const token = localStorage.getItem(tokenKey);
-  const userName = localStorage.getItem(userKey);
-
-  if (!token || !userName) {
-    return null;
-  }
-
-  return { token, userName };
-};
-
-const persistSession = (session: AuthSession) => {
-  localStorage.setItem(tokenKey, session.token);
-  localStorage.setItem(userKey, session.userName);
-};
-
-const clearSession = () => {
-  localStorage.removeItem(tokenKey);
-  localStorage.removeItem(userKey);
-};
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [session, setSession] = useState<AuthSession | null>(loadSession());
+  const userManager = getUserManager();
+
+  return (
+    <OidcAuthProvider userManager={userManager}>
+      <AuthContextProvider>{children}</AuthContextProvider>
+    </OidcAuthProvider>
+  );
+};
+
+const AuthContextProvider = ({ children }: { children: ReactNode }) => {
+  const oidc = useOidcAuth();
+  const userManager = getUserManager();
 
   const signInWithPassword = useCallback(async (login: string, password: string) => {
-    const response = await signIn({ login, password });
-    const nextSession = { token: response.token, userName: response.userName };
-    persistSession(nextSession);
-    setSession(nextSession);
-  }, []);
+    await userManager.signinResourceOwnerCredentials({
+      username: login,
+      password,
+    });
+  }, [userManager]);
 
   const signUpWithPassword = useCallback(async (login: string, password: string) => {
-    const response = await signUp({ login, password });
-    const nextSession = { token: response.token, userName: response.userName };
-    persistSession(nextSession);
-    setSession(nextSession);
-  }, []);
+    await signUp({ login, password });
+    await signInWithPassword(login, password);
+  }, [signInWithPassword]);
 
   const signOut = useCallback(() => {
-    clearSession();
-    setSession(null);
-  }, []);
+    void oidc.removeUser();
+  }, [oidc]);
+
+  const getAccessToken = useCallback(async () => {
+    if (oidc.user && !oidc.user.expired) {
+      return oidc.user.access_token;
+    }
+
+    try {
+      const refreshed = await userManager.signinSilent();
+      return refreshed?.access_token ?? null;
+    } catch {
+      await oidc.removeUser();
+      return null;
+    }
+  }, [oidc, userManager]);
 
   const deleteAccount = useCallback(async () => {
-    if (!session) {
+    const token = await getAccessToken();
+    if (!token) {
       return;
     }
 
-    await deleteAccountRequest(session.token);
-    clearSession();
-    setSession(null);
-  }, [session]);
+    await deleteAccountRequest(token);
+    await oidc.removeUser();
+  }, [getAccessToken, oidc]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
-      isAuthenticated: Boolean(session),
-      userName: session?.userName ?? null,
-      token: session?.token ?? null,
+      isAuthenticated: Boolean(oidc.user) && !oidc.user?.expired,
+      userName: oidc.user?.profile?.name
+        ?? oidc.user?.profile?.preferred_username
+        ?? oidc.user?.profile?.sub
+        ?? null,
+      getAccessToken,
       signInWithPassword,
       signUpWithPassword,
       signOut,
       deleteAccount,
     }),
-    [session, signInWithPassword, signUpWithPassword, signOut, deleteAccount],
+    [oidc.user, getAccessToken, signInWithPassword, signUpWithPassword, signOut, deleteAccount],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

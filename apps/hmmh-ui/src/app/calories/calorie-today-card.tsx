@@ -21,7 +21,7 @@ const partOfDayOptions = [
 ];
 
 export const CalorieTodayCard = ({ date, onDateChange, allowDateChange, onSaved }: CalorieTodayCardProps) => {
-  const { token } = useAuth();
+  const { getAccessToken } = useAuth();
   const todayDate = useMemo(() => getTodayDateString(), []);
   const entryDate = date ? toDateInputValue(date) : todayDate;
   const [calories, setCalories] = useState<number | string>('');
@@ -32,7 +32,12 @@ export const CalorieTodayCard = ({ date, onDateChange, allowDateChange, onSaved 
   const [error, setError] = useState<string | null>(null);
 
   const handleSave = async () => {
-    if (!token || typeof calories !== 'number') {
+    if (typeof calories !== 'number') {
+      return;
+    }
+
+    const token = await getAccessToken();
+    if (!token) {
       return;
     }
 
