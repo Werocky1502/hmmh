@@ -1,5 +1,6 @@
-using Hmmh.Api.Contracts;
-using Hmmh.Api.Models;
+using Hmmh.Api.Contracts.Requests;
+using Hmmh.Api.Contracts.Responses;
+using Hmmh.Api.Db.Models;
 
 namespace Hmmh.Api.Services;
 

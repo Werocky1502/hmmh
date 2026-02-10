@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Hmmh.Api.Models;
+namespace Hmmh.Api.Contracts.Requests;
 
 /// <summary>
 ///     Request payload for creating or updating a weight entry.

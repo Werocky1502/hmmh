@@ -6,7 +6,7 @@ It is built as an Nx monorepo with a React + TypeScript UI, a .NET REST API, and
 - apps/hmmh-ui: React + TypeScript + Mantine UI
 - apps/hmmh-api: ASP.NET Core API with EF Core
 - libs/: Shared code and utilities
-- apps/hmmh-api/infra/db: PostgreSQL container setup for local development
+- apps/hmmh-api/Db: Database context, models, migrations, repositories, scripts, and PostgreSQL container setup
 
 ## Implementation Phases
 1. Add repo-level instructions and update documentation.
@@ -20,8 +20,10 @@ It is built as an Nx monorepo with a React + TypeScript UI, a .NET REST API, and
 9. Refactor auth to in-API OIDC (OpenIddict) with token refresh.
 10. Refactor API into layered architecture (services, repositories, factories, DI extensions).
 11. Refactor UI into shared components, chart abstractions, and page templates.
+12. Add SQL script runner with tracked execution and test data seeding.
 
 ## Configuration Notes
 - UI reads the API base URL from `VITE_API_BASE_URL` (defaults to same origin).
 - API token lifetimes live in `appsettings.json` under `OpenIddict`.
 - OAuth token endpoint is available at `/connect/token`.
+- SQL scripts live in `apps/hmmh-api/Db/Scripts` and can be applied via `npm run db:apply-scripts`.

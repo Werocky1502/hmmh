@@ -1,4 +1,4 @@
-namespace Hmmh.Api.Models;
+namespace Hmmh.Api.Db.Models;
 
 /// <summary>
 ///     Represents a local HMMH user stored in the database.

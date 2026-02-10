@@ -1,6 +1,7 @@
-using Hmmh.Api.Data;
+using Hmmh.Api.Db.Data;
+using Hmmh.Api.Db.Repositories;
+using Hmmh.Api.Db.Scripts;
 using Hmmh.Api.Factories;
-using Hmmh.Api.Repositories;
 using Hmmh.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -36,6 +37,10 @@ public static class ServiceCollectionExtensions
         // Configure EF Core with PostgreSQL for the main application database.
         services.AddDbContext<HmmhDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("HmmhDatabase")));
+
+        // Register SQL script runner configuration.
+        services.Configure<SqlScriptOptions>(configuration.GetSection("SqlScripts"));
+        services.AddScoped<ISqlScriptRunner, SqlScriptRunner>();
 
         // Register generic repository for data access.
         services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));

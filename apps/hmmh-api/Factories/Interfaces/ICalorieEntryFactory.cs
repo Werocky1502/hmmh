@@ -1,4 +1,4 @@
-using Hmmh.Api.Models;
+using Hmmh.Api.Db.Models;
 
 namespace Hmmh.Api.Factories;
 

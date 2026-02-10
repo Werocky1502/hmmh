@@ -1,4 +1,4 @@
-using Hmmh.Api.Contracts;
+using Hmmh.Api.Contracts.Responses;
 using Hmmh.Api.Factories;
 using Microsoft.AspNetCore.Mvc;
 

@@ -1,4 +1,6 @@
-using Hmmh.Api.Data;
+using System.Linq;
+using Hmmh.Api.Db.Data;
+using Hmmh.Api.Db.Scripts;
 using Hmmh.Api.Extensions;
 using Hmmh.Api.Middleware;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +20,12 @@ public static class Program
         builder.Services.AddApiServices(builder.Configuration, builder.Environment);
 
         var app = builder.Build();
+
+        if (args.Any(argument => string.Equals(argument, "--apply-db-scripts", StringComparison.OrdinalIgnoreCase)))
+        {
+            RunSqlScripts(app);
+            return;
+        }
 
         ConfigurePipeline(app);
 
@@ -53,6 +61,18 @@ public static class Program
         app.Services.SeedOpenIddictAsync().GetAwaiter().GetResult();
 
         app.MapControllers();
+    }
+
+    /// <summary>
+    ///     Executes SQL scripts and exits without starting the web host.
+    /// </summary>
+    /// <param name="app">Web application instance.</param>
+    private static void RunSqlScripts(WebApplication app)
+    {
+        // Resolve the script runner from DI and apply pending scripts.
+        using var scope = app.Services.CreateScope();
+        var runner = scope.ServiceProvider.GetRequiredService<ISqlScriptRunner>();
+        runner.ApplyPendingScriptsAsync().GetAwaiter().GetResult();
     }
 
 }

@@ -1,8 +1,8 @@
-using Hmmh.Api.Data;
+using Hmmh.Api.Db.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
-namespace Hmmh.Api.Repositories;
+namespace Hmmh.Api.Db.Repositories;
 
 /// <summary>
 ///     Generic EF Core repository implementation.

@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 
-namespace Hmmh.Api.Repositories;
+namespace Hmmh.Api.Db.Repositories;
 
 /// <summary>
 ///     Defines generic database operations for entities.

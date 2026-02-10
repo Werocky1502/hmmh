@@ -1,23 +1,22 @@
-namespace Hmmh.Api.Contracts;
+using System.ComponentModel.DataAnnotations;
+
+namespace Hmmh.Api.Contracts.Requests;
 
 /// <summary>
-///     Response payload for a stored calorie entry.
+///     Request payload for creating a calorie entry.
 /// </summary>
-public sealed class CalorieEntryResponse
+public sealed class CalorieEntryRequest
 {
-    /// <summary>
-    ///     Unique identifier for the calorie entry.
-    /// </summary>
-    public Guid Id { get; init; }
-
     /// <summary>
     ///     Date for the calorie entry.
     /// </summary>
+    [Required]
     public DateOnly Date { get; init; }
 
     /// <summary>
     ///     Calories recorded for the entry.
     /// </summary>
+    [Required]
     public int Calories { get; init; }
 
     /// <summary>
@@ -35,3 +34,4 @@ public sealed class CalorieEntryResponse
     /// </summary>
     public string? Note { get; init; }
 }
+

@@ -1,6 +1,6 @@
 using Hmmh.Api.Extensions;
-using Hmmh.Api.Models;
-using Hmmh.Api.Repositories;
+using Hmmh.Api.Db.Models;
+using Hmmh.Api.Db.Repositories;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 using System.Security.Claims;

@@ -1,4 +1,4 @@
-namespace Hmmh.Api.Models;
+namespace Hmmh.Api.Db.Models;
 
 /// <summary>
 ///     Stored calorie entry for a user on a specific date.

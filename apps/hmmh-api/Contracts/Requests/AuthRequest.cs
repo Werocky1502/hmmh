@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Hmmh.Api.Models;
+namespace Hmmh.Api.Contracts.Requests;
 
 /// <summary>
 ///     Authentication request payload for sign-in and sign-up.

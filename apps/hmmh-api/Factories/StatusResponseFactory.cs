@@ -1,4 +1,4 @@
-using Hmmh.Api.Contracts;
+using Hmmh.Api.Contracts.Responses;
 
 namespace Hmmh.Api.Factories;
 

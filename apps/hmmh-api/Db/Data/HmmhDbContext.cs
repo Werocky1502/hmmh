@@ -1,8 +1,8 @@
-using Hmmh.Api.Models;
+using Hmmh.Api.Db.Models;
 using Microsoft.EntityFrameworkCore;
 using OpenIddict.EntityFrameworkCore;
 
-namespace Hmmh.Api.Data;
+namespace Hmmh.Api.Db.Data;
 
 /// <summary>
 ///     EF Core database context for HMMH data.
@@ -33,6 +33,11 @@ public sealed class HmmhDbContext : DbContext
     ///     Calorie entries recorded by users.
     /// </summary>
     public DbSet<CalorieEntry> CalorieEntries => Set<CalorieEntry>();
+
+    /// <summary>
+    ///     Applied SQL scripts for tracking one-time execution.
+    /// </summary>
+    public DbSet<ScriptHistory> ScriptHistories => Set<ScriptHistory>();
 
     /// <summary>
     ///     Configures EF Core model mappings.
@@ -79,6 +84,21 @@ public sealed class HmmhDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(entry => entry.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ScriptHistory>(entity =>
+        {
+            // Track applied SQL scripts by unique file name.
+            entity.ToTable("ScriptHistory");
+            entity.HasKey(script => script.ScriptName);
+            entity.Property(script => script.ScriptName)
+                .HasMaxLength(260)
+                .IsRequired();
+            entity.Property(script => script.ScriptHash)
+                .HasMaxLength(64)
+                .IsRequired();
+            entity.Property(script => script.AppliedOn)
+                .HasColumnType("timestamp with time zone");
         });
     }
 }

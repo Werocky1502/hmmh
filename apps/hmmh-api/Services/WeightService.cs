@@ -1,8 +1,9 @@
-using Hmmh.Api.Contracts;
+using Hmmh.Api.Contracts.Requests;
+using Hmmh.Api.Contracts.Responses;
 using Hmmh.Api.Exceptions;
 using Hmmh.Api.Factories;
-using Hmmh.Api.Models;
-using Hmmh.Api.Repositories;
+using Hmmh.Api.Db.Models;
+using Hmmh.Api.Db.Repositories;
 
 namespace Hmmh.Api.Services;
 
