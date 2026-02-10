@@ -60,7 +60,12 @@ public sealed class TokenService : ITokenService
                 "Invalid login or password."));
         }
 
-        var scopes = request.GetScopes().Intersect(new[] { "api", OpenIddictConstants.Scopes.OfflineAccess })
+        var scopes = request.GetScopes().Intersect(new[]
+        {
+            OpenIddictConstants.Scopes.OpenId,
+            "api",
+            OpenIddictConstants.Scopes.OfflineAccess,
+        })
             .ToArray();
         var principal = BuildPrincipal(user, scopes);
 

@@ -1,11 +1,11 @@
 import type { ReactElement } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './auth/auth-context';
-import { CaloriesPage } from './pages/calories-page';
-import { DashboardPage } from './pages/dashboard-page';
+import { CaloriesPage } from './pages/calories/calories-page';
+import { DashboardPage } from './pages/dashboard/dashboard-page';
 import { LandingPage } from './pages/landing-page';
-import { LoginPage } from './pages/login-page';
-import { WeightsPage } from './pages/weights-page';
+import { LoginPage } from './pages/login/login-page';
+import { WeightsPage } from './pages/weights/weights-page';
 
 const RequireAuth = ({ children }: { children: ReactElement }) => {
   const { isAuthenticated } = useAuth();

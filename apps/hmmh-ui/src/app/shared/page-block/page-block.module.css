@@ -1,0 +1,9 @@
+.surface {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f7f3ee 0%, #f1f5f4 100%);
+  color: #102a2f;
+}
+
+.section {
+  margin-top: 24px;
+}

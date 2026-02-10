@@ -1,0 +1,39 @@
+.filterRow {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.filterControls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.currentDate {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+
+.filterInput {
+  max-width: 260px;
+}
+
+.filterLabel {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .filterRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

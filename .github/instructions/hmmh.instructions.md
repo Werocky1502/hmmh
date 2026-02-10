@@ -44,6 +44,7 @@ These rules apply to all changes in this repository unless a more specific instr
 8. Add calorie management (calorie entries API + dashboard and calories page UI). Commit.
 9. Refactor auth to in-API OIDC (OpenIddict) with token refresh. Commit.
 10. Refactor API into layered architecture (services, repositories, factories, DI extensions). Commit.
+11. Refactor UI into shared components, chart abstractions, and page templates. Commit.
 
 ## Commits
 - Make a commit after each phase listed above.

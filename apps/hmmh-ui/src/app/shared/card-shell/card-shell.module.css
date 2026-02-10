@@ -1,0 +1,40 @@
+.card {
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.solid {
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.soft {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.header {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.headerCentered {
+  text-align: center;
+}
+
+.headerColumn {
+  flex-direction: column;
+  gap: 6px;
+}
+
+.clickable {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 30px rgba(16, 42, 47, 0.12);
+}
+
+.clickable:focus-visible {
+  outline: 2px solid rgba(31, 111, 115, 0.5);
+  outline-offset: 3px;
+}

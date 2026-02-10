@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { AuthProvider as OidcAuthProvider, useAuth as useOidcAuth } from 'react-oidc-context';
 import { getUserManager } from './oidc-client';
-import { deleteAccount as deleteAccountRequest, signUp } from './auth-api';
+import { deleteAccount as deleteAccountRequest, signUp } from '../api/auth-api';
 
 interface AuthContextValue {
   isAuthenticated: boolean;
@@ -15,6 +15,26 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+const parseJwtPayload = (token?: string | null) => {
+  if (!token) {
+    return null;
+  }
+
+  const parts = token.split('.');
+  if (parts.length < 2) {
+    return null;
+  }
+
+  try {
+    const payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = payload.padEnd(payload.length + ((4 - (payload.length % 4)) % 4), '=');
+    const decoded = atob(padded);
+    return JSON.parse(decoded) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+};
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const userManager = getUserManager();
@@ -73,10 +93,24 @@ const AuthContextProvider = ({ children }: { children: ReactNode }) => {
   const value = useMemo<AuthContextValue>(
     () => ({
       isAuthenticated: Boolean(oidc.user) && !oidc.user?.expired,
-      userName: oidc.user?.profile?.name
-        ?? oidc.user?.profile?.preferred_username
-        ?? oidc.user?.profile?.sub
-        ?? null,
+      userName: (() => {
+        const profileName = oidc.user?.profile?.name
+          ?? oidc.user?.profile?.preferred_username
+          ?? oidc.user?.profile?.sub;
+        if (profileName) {
+          return profileName;
+        }
+
+        const claims = parseJwtPayload(oidc.user?.access_token);
+        if (!claims) {
+          return null;
+        }
+
+        return (claims.name
+          ?? claims.preferred_username
+          ?? claims.sub
+          ?? null) as string | null;
+      })(),
       getAccessToken,
       signInWithPassword,
       signUpWithPassword,
