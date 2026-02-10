@@ -28,4 +28,11 @@ export default defineConfig(() => ({
       transformMixedEsModules: true,
     },
   },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./src/vitest.setup.ts'],
+    restoreMocks: true,
+    clearMocks: true,
+  },
 }));

@@ -23,6 +23,7 @@ It is built as an Nx monorepo with a React + TypeScript UI, a .NET REST API, and
 11. Refactor UI into shared components, chart abstractions, and page templates.
 12. Add SQL script runner with tracked execution and test data seeding.
 13. Add API tests with an MSTest project and Nx command.
+14. Add UI tests with Vitest + React Testing Library and an Nx command.
 
 ## Configuration Notes
 - UI reads the API base URL from `VITE_API_BASE_URL` (defaults to same origin).

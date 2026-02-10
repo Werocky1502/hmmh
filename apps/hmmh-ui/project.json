@@ -18,6 +18,13 @@
         "command": "npx vite build",
         "cwd": "apps/hmmh-ui"
       }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx vitest run",
+        "cwd": "apps/hmmh-ui"
+      }
     }
   }
 }

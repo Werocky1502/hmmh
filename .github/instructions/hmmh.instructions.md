@@ -22,7 +22,7 @@ These rules apply to all changes in this repository unless a more specific instr
 - Use React with TypeScript and Mantine as the primary UI library.
 - Prefer composing Mantine components over custom CSS when possible.
 - If custom CSS is needed, keep it in a co-located .css file next to the component.
-- No UI tests in the first iteration.
+- UI tests are introduced in phase 14; skip UI tests before that phase.
 
 ## API (.NET + EF Core)
 - Use the latest .NET SDK (currently .NET 10) and EF Core.
@@ -46,6 +46,7 @@ These rules apply to all changes in this repository unless a more specific instr
 11. Refactor UI into shared components, chart abstractions, and page templates. Commit.
 12. Add SQL script runner with tracked execution and test data seeding. Commit.
 13. Add API tests with an MSTest project and Nx command. Commit.
+14. Add UI tests with Vitest + React Testing Library and an Nx command. Commit.
 
 ## Commits
 - Make a commit after each phase listed above.

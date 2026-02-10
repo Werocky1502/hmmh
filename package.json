@@ -8,8 +8,9 @@
     "libs/*"
   ],
   "scripts": {
-    "dev:ui": "nx dev hmmh-ui",
-    "build:ui": "nx build hmmh-ui",
+    "ui:dev": "nx dev hmmh-ui",
+    "ui:build": "nx build hmmh-ui",
+    "ui:test": "nx test hmmh-ui",
     "api:run": "nx run hmmh-api:run",
     "api:build": "nx run hmmh-api:build",
     "api:test": "nx run hmmh-api:test",
@@ -30,6 +31,9 @@
     "@swc-node/register": "~1.9.1",
     "@swc/core": "~1.5.7",
     "@swc/helpers": "~0.5.11",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^20.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
